@@ -32,10 +32,24 @@ expect spear
 # Confirm: the unit moves next to the Grunt and attacks.
 mark
 key Enter
-wait-for 60000 gains
+wait-for 60000 attacks enemy Orcish Grunt
 expect moved to 6, 3
-expect attacks enemy Orcish Grunt
 expect to hit
+
+# The fight gives the last experience point: the native advancement dialog
+# lists the choices.
+wait-dialog 60000 unit_advance
+mark
+key F4
+expect Pikeman
+expect Javelineer
+expect Swordsman
+mark
+key Down
+expect of 3
+mark
+key Enter
+wait-for 20000 advanced to
 
 # Recruit with the native dialog (Ctrl+R).
 mark

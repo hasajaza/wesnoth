@@ -1,0 +1,85 @@
+# Wesnoth Access end-to-end test: start "A Tale of Two Brothers" from the main
+# menu using only the keyboard, read the story and the dialogue, reach the
+# first turn, read the objectives, save the game.
+#ARGS:
+
+wait-dialog 240000 title_screen
+expect Campaigns, button
+
+# Enter on the focused Campaigns button opens the campaign selection.
+mark
+key Enter
+wait-dialog 60000 campaign_selection
+expect Battle Training
+mark
+key Down
+expect A Tale of Two Brothers
+expect An evil mage
+
+# Enter starts the selected campaign.
+mark
+key Enter
+wait-dialog 120000 story_viewer
+wait-for 20000 Maghre
+expect next, button
+
+# Enter presses "next": the next story page is read automatically.
+# (While a page is still fading in, the game's first press only completes the fade.)
+wait 4000
+mark
+key Enter
+wait 3000
+expect dark mage
+# F11 repeats the last story text from the dialogue history.
+mark
+key F11
+expect Dialogue
+expect dark mage
+# Escape skips the rest of the story; the scenario starts with dialogue.
+key Escape
+wait-dialog 60000 wml_message_left
+wait-for 10000 Greetings, brother
+mark
+key F4
+expect Baran
+
+# Enter dismisses each message; the dialogue history keeps them.
+press-until 120000 Enter Your turn
+mark
+key Shift+F11
+expect Dialogue
+
+# Close the objectives popup if it is shown, then read objectives and economy.
+wait 2000
+key Escape
+wait 1000
+mark
+key F8
+expect Objectives
+expect Mordak
+mark
+key F9
+expect Turn 1
+
+# Save the game with the native dialog (Ctrl+S, Enter).
+mark
+key Ctrl+S
+wait-dialog 15000 game_save
+expect Save
+key Enter
+wait-for 15000 has been saved
+key Enter
+wait 1500
+
+# Load it again with the native dialog (Ctrl+O): the list of saves is read.
+mark
+key Ctrl+O
+wait-dialog 15000 game_load
+expect Load
+expect Rooting Out a Mage
+mark
+key Enter
+wait-for 120000 Your turn
+expect Turn 1 of 18
+
+quit

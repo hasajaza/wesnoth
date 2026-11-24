@@ -95,8 +95,14 @@ public:
 				waiting_ = false;
 				next_ticks_ = now;
 			} else {
+				if(press_key_ != 0 && now >= next_press_) {
+					push_key(press_key_, press_mods_, true);
+					push_key(press_key_, press_mods_, false);
+					next_press_ = now + 1500;
+				}
 				return;
 			}
+			press_key_ = 0;
 		}
 		if(now < next_ticks_) {
 			return;
@@ -252,6 +258,29 @@ private:
 			wait_deadline_ = SDL_GetTicks() + ms;
 			wait_desc_ = line;
 			waiting_ = true;
+		} else if(cmd == "press-until") {
+			std::istringstream is(arg);
+			int ms = 0;
+			std::string key;
+			is >> ms >> key;
+			std::string text;
+			std::getline(is, text);
+			text = lower(text.substr(text.find_first_not_of(' ') == std::string::npos ? text.size() : text.find_first_not_of(' ')));
+			int code;
+			unsigned mods;
+			if(!keymap::parse_key(key, code, mods)) {
+				fail("invalid key: " + key);
+				return;
+			}
+			press_key_ = code;
+			press_mods_ = mods;
+			wait_text_ = text;
+			wait_dialog_ = false;
+			wait_from_ = all_.size();
+			wait_deadline_ = SDL_GetTicks() + ms;
+			wait_desc_ = line;
+			waiting_ = true;
+			next_press_ = SDL_GetTicks() + 1500;
 		} else if(cmd == "rng-mark") {
 			rng_state_ = synced_state();
 			rng_marked_ = !rng_state_.empty();
@@ -327,6 +356,9 @@ private:
 	bool rng_marked_ = false;
 	bool finished_ = false;
 	bool mods_held_ = false;
+	int press_key_ = 0;
+	unsigned press_mods_ = 0;
+	uint32_t next_press_ = 0;
 };
 
 std::unique_ptr<driver> g_driver;

@@ -29,8 +29,9 @@
  *   never <text>                 text must never be spoken during the whole test
  *   wait-for <ms> <text>         wait until text is spoken (fails after <ms>)
  *   wait-dialog <ms> <id>        wait until the GUI2 window <id> is on top
- *   rng-mark                     remember the number of synced random calls
- *   rng-unchanged                fail if random numbers were consumed since rng-mark
+ *   press-until <ms> <key> <text> press the key every 1.5 s until text is spoken
+ *   rng-mark                     remember the synced random state (scenario RNG, replay)
+ *   rng-unchanged                fail if that state changed since rng-mark
  *   quit                         write the report and exit
  *
  * Lines starting with '#' are comments. The report lists PASS/FAIL lines and a
