@@ -43,6 +43,7 @@
 #include "utils/general.hpp"
 
 #include <SDL2/SDL_events.h>
+#include <SDL2/SDL_timer.h>
 
 #include <algorithm>
 #include <array>
@@ -76,6 +77,7 @@ struct game_state_access
 	std::vector<std::string> heal_lines;
 	map_location last_selected;
 	std::string last_selected_id;
+	uint32_t last_escape = 0;
 	bool combat_visible = false;
 	std::vector<std::string> combat_lines;
 };
@@ -1061,11 +1063,14 @@ void goto_leader()
 	speak(_("You have no leader."), msg::reply);
 }
 
+void goto_leader();
+
 void goto_selected()
 {
 	map_location sel = mouse().get_selected_hex();
-	if(!sel.valid()) {
-		speak(_("No unit selected."), msg::reply);
+	if(!sel.valid() || !visible_unit(sel)) {
+		// Nothing selected: go to the leader instead.
+		goto_leader();
 		return;
 	}
 	set_cursor(sel, true);
@@ -1211,12 +1216,21 @@ bool handle_event(controller_base& controller, const SDL_Event& event)
 		return false;
 	}
 	if(cmd == command::cancel) {
-		// Escape: deselect first; with nothing selected keep the native behaviour.
+		// Escape: deselect first. With nothing selected the game asks whether
+		// to quit; require a second Escape so it is not opened by accident.
 		if(mouse().get_selected_hex().valid()) {
 			cancel_selection();
+			g.last_escape = 0;
 			return true;
 		}
-		return false;
+		const uint32_t now = SDL_GetTicks();
+		if(g.last_escape != 0 && now - g.last_escape < 3000) {
+			g.last_escape = 0;
+			return false;
+		}
+		g.last_escape = now;
+		speak(_("Nothing selected. Press Escape again to open the quit question."), msg::reply);
+		return true;
 	}
 	if(!on_board(g.cursor)) {
 		// Start at the selected unit or the leader.
@@ -1601,6 +1615,21 @@ void on_announce(const std::string& text)
 		return;
 	}
 	event_message(plain_text(text), true);
+}
+
+void on_overlay_text(const std::string& text)
+{
+	if(!enabled()) {
+		return;
+	}
+	std::string t = plain_text(text);
+	if(t.empty()) {
+		return;
+	}
+	// Overlays carry instructions (tutorial hints, scenario notes): keep them
+	// in the dialogue history too, so F11 can repeat them.
+	add_dialogue("", t);
+	speak(t, msg::important);
 }
 
 void on_chat(const std::string& speaker, const std::string& text)

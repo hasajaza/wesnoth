@@ -17,9 +17,14 @@ key Enter
 # The choice changed the scenario: the next message uses it.
 wait-for 20000 You chose the river path
 expect-not wml message
+# [print] overlays are spoken.
+expect Hint: overlays like this one are spoken.
 mark
 key F11
 expect river path
+mark
+key Shift+F11
+expect Hint: overlays
 mark
 key Shift+F11
 expect Which way shall we go?

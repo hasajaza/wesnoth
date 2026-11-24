@@ -1,5 +1,12 @@
 WESNOTH ACCESS CHANGELOG
 
+Changes after the first JAWS test (same version number until release)
+- Text overlays shown on the map ([print], tutorial hints such as "Move
+  Li'sar next to Delfador") are spoken and kept in the F11 history.
+- Escape with nothing selected needs a second press for the quit question.
+- Home goes to the leader when nothing is selected.
+- Popups without a title are no longer called "transient message".
+
 0.1.0 (first test version, for Battle for Wesnoth 1.18.8)
 - Speech through JAWS, NVDA or SAPI with Universal Speech, on a worker thread.
 - All GUI2 menus and dialogs usable with Tab, arrows, Enter, Space, Escape;

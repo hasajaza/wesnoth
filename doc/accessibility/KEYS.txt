@@ -59,7 +59,7 @@ A                  South-west
 Q                  North-west
 Shift+W/E/D/S/A/Q  Jump in that direction until the terrain changes or a unit,
                    village or label is reached
-Home               Cursor to the selected unit
+Home               Cursor to the selected unit (to your leader when nothing is selected)
 Shift+Home         Cursor to your leader
 Backspace          Cursor back to the previous location
 Ctrl+G             Jump to coordinates (type column and row, for example 12 5)
@@ -98,8 +98,8 @@ Enter              On one of your units: select it.
                    With a unit selected, on an empty reachable tile: move there.
                    With a unit selected, on an enemy: open the attack dialog
                    (after F7, from the attack position you chose).
-Escape             Deselect the selected unit. With nothing selected, Escape
-                   keeps its normal meaning (game menu / quit question).
+Escape             Deselect the selected unit. With nothing selected, press
+                   Escape twice (within 3 seconds) for the game's quit question.
 Ctrl+Alt+D         The game's own help page for the unit under the cursor
 Ctrl+Alt+S         The game's statistics dialog
 
@@ -119,7 +119,7 @@ Ctrl+S             Save game
 Ctrl+O             Load game
 Ctrl+P             Preferences
 Ctrl+Q             Quit to desktop
-Escape             Game menu, with nothing selected
+Escape, Escape     Quit question, with nothing selected
 
 The keys W, E, D, S, A and Q replace two plain letter keys of the game in the
 map view: D (unit description) is available as Ctrl+Alt+D and S (statistics)

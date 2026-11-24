@@ -631,7 +631,7 @@ std::string window_title(window& win, const collection& c)
 			}
 		}
 	}
-	if(win.id().compare(0, 11, "wml_message") == 0) {
+	if(win.id().compare(0, 11, "wml_message") == 0 || win.id() == "transient_message" || win.id() == "message") {
 		// A message without a speaker (narrator): no title.
 		return std::string();
 	}

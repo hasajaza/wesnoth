@@ -94,6 +94,9 @@ void on_advance(const unit& u);
 /** Floating announcement shown by the display (ambush, units sighted, ...). */
 void on_announce(const std::string& text);
 
+/** Text shown as an overlay on the map ([print], scenario hints). */
+void on_overlay_text(const std::string& text);
+
 /** Chat or [print]-style message added to the chat area. */
 void on_chat(const std::string& speaker, const std::string& text);
 

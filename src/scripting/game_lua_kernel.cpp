@@ -26,6 +26,8 @@
 
 #include "scripting/game_lua_kernel.hpp"
 
+#include "accessibility/game_access.hpp"
+
 #include "actions/attack.hpp"           // for battle_context_unit_stats, etc
 #include "actions/advancement.hpp"           // for advance_unit_at, etc
 #include "actions/move.hpp"		// for clear_shroud
@@ -2506,6 +2508,10 @@ int game_lua_kernel::intf_set_floating_label(lua_State* L, bool spawn)
 	}
 
 	*handle = font::add_floating_label(flabel);
+
+	// Wesnoth Access: speak text overlays ([print], tutorial hints).
+	accessibility::game::on_overlay_text(text.str());
+
 	lua_settop(L, handle_idx);
 	if(luaL_newmetatable(L, labelKey)) {
 		// Initialize the metatable

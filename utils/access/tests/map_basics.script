@@ -122,7 +122,8 @@ rng-unchanged
 # Select the Spearman and look at its options.
 mark
 key Home
-expect No unit selected
+# Nothing is selected yet: Home goes to the leader.
+expect Lieutenant
 key F3
 key F3
 mark
@@ -143,10 +144,14 @@ expect Press Enter to open the attack dialog
 
 rng-unchanged
 
-# Escape clears the selection.
+# Escape clears the selection; with nothing selected a second Escape is
+# needed for the game's quit question.
 mark
 key Escape
 expect Selection cleared
+mark
+key Escape
+expect Press Escape again
 
 # Settings dialog and command reference are reachable from the map.
 mark

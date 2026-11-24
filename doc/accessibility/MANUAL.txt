@@ -67,7 +67,13 @@ M multiplayer, A add-ons, Ctrl+O load, Ctrl+P preferences, Ctrl+Q quit.
    villages, time of day and your units.
 
 F11 repeats the last dialogue line or story page at any time; Shift+F11
-goes back through the earlier ones.
+goes back through the earlier ones. Instructions that scenarios show as
+text on the map (for example the tutorial's "Move Li'sar next to
+Delfador") are spoken and kept in the same history.
+
+Tutorial tip: the tutorial expects you to move your hero next to Delfador.
+Ctrl+F4 moves the cursor to Delfador (an allied unit); the hexes around him
+can be checked with Z, and F6 lists where your selected hero can go.
 
 
 4. THE MAP
@@ -148,8 +154,9 @@ of a turn are announced.
 
 Ctrl+S saves (the save dialog proposes a name; Enter saves). Ctrl+O loads
 (the list of saved games, newest first; Enter loads). In the main menu,
-Load does the same. Escape on the map with nothing selected opens the
-game's menu; Ctrl+Q quits to the desktop after a confirmation.
+Load does the same. On the map, Escape first clears the selection; with
+nothing selected, a second Escape opens the game's quit question (so it is
+not opened by accident). Ctrl+Q quits to the desktop after a confirmation.
 
 
 8. THE GAME'S HELP
