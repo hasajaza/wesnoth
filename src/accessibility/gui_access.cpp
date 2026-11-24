@@ -401,7 +401,9 @@ void collect(widget& w, collection& c, std::string& pending_label)
 		std::string text = label_of(*lb);
 		if(!text.empty()) {
 			c.texts.push_back({lb, lb->id(), text, content_ids.count(lb->id()) > 0});
-			if(text.size() < 80) {
+			// Short captions name the next control; pure values ("2", "50%") do not.
+			const bool is_value = text.find_first_not_of("0123456789.,%+-/ \xE2\x88\x92") == std::string::npos;
+			if(text.size() < 80 && !is_value) {
 				pending_label = text;
 			}
 		}
@@ -472,21 +474,26 @@ std::string role_name(role r)
 std::string control_name(const focusable& f)
 {
 	std::string name;
+	const bool labelled = f.r == role::button || f.r == role::check || f.r == role::sort_header || f.r == role::multimenu;
 	if(auto* sw = dynamic_cast<styled_widget*>(f.w)) {
-		if(f.r == role::button || f.r == role::check || f.r == role::sort_header || f.r == role::multimenu) {
+		if(labelled) {
 			name = label_of(*sw);
-		}
-		if(name.empty()) {
-			name = tooltip_of(*sw);
 		}
 	}
 	if(f.r == role::toggle_panel) {
 		name = row_text(static_cast<toggle_panel*>(f.w)->get_grid());
 	}
+	// Controls without their own caption (sliders, fields, menus, lists) are
+	// named by the visible label before them, like a sighted user reads them.
 	if(name.empty()) {
 		name = f.label_hint;
 		while(!name.empty() && (name.back() == ':' || name.back() == ' ')) {
 			name.pop_back();
+		}
+	}
+	if(name.empty()) {
+		if(auto* sw = dynamic_cast<styled_widget*>(f.w)) {
+			name = tooltip_of(*sw);
 		}
 	}
 	if(name.empty() && f.r != role::long_text && f.r != role::list) {
@@ -1295,6 +1302,11 @@ bool key_before(window& win, const SDL_Event& event)
 		if(activate(win, st, f, space)) {
 			if(space) {
 				st.suppress_text_input = true;
+			}
+			// The click handlers ran synchronously: report what they changed
+			// (unless they closed this window).
+			if(std::find(g_stack.begin(), g_stack.end(), &win) != g_stack.end()) {
+				announce_changes(win, state_of(win), true);
 			}
 			return true;
 		}

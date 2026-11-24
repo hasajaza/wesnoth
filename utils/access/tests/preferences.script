@@ -1,0 +1,53 @@
+# Wesnoth Access end-to-end test: the Preferences dialog (pages, check
+# boxes, sliders) through the generic dialog layer.
+#ARGS:
+
+wait-dialog 240000 title_screen
+mark
+key Ctrl+P
+wait-dialog 30000 preferences_dialog
+expect Preferences
+expect General, 1 of 6
+# F4 lists the categories.
+mark
+key F4
+expect items: General; Hotkeys; Display; Sound; Multiplayer; Advanced
+
+# The first slider is named by its visible caption.
+mark
+key Tab
+expect Scroll speed, slider, 50
+mark
+key Right
+expect 51
+key Left
+expect 50
+
+# Check boxes toggle with Space; the new state is spoken.
+mark
+key Tab
+expect Skip AI moves, check box, not checked
+mark
+key Space
+expect checked
+key Space
+expect not checked
+
+# Back to the category list and to the Sound page.
+mark
+key Shift+Tab
+key Shift+Tab
+expect list
+mark
+key Down
+key Down
+key Down
+expect Sound, 4 of 6
+mark
+key Tab
+expect check box
+
+mark
+key Escape
+wait-dialog 20000 title_screen
+quit
