@@ -131,8 +131,12 @@ slowed, killed), then the experience gained.
 Advancement: when a unit can advance to more than one type, the game's
 dialog opens with the choices as a list; F4 reads them all.
 
-Recruit: put the cursor on your leader's keep (Shift+Home) and press
-Ctrl+R. The recruit dialog lists the units with their cost; the details of
+Recruit: units are recruited at a castle, never at a village (villages
+give gold and healing). Your leader must first stand on a keep, the centre
+hex of a castle: K moves the cursor to the keeps (Shift+K backwards), then
+select your leader and move it there. With the leader on the keep press
+Ctrl+R. If the leader is not on a keep, you are told so instead of the
+recruit list. The recruit dialog lists the units with their cost; the details of
 the selected unit are read with F4. Enter recruits onto a free castle hex.
 Recall works the same with Alt+R.
 

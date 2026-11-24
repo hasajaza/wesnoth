@@ -543,7 +543,7 @@ map_location::DIRECTION dir_of(command c)
 
 // ------------------------------------------------------------- lists ---
 
-enum list_kind { L_UNITS, L_ACTIVE, L_WOUNDED, L_ALLIES, L_ENEMIES, L_VILLAGES, L_LABELS, L_REACH, L_TARGETS };
+enum list_kind { L_UNITS, L_ACTIVE, L_WOUNDED, L_ALLIES, L_ENEMIES, L_VILLAGES, L_LABELS, L_REACH, L_TARGETS, L_KEEPS };
 
 struct list_entry
 {
@@ -608,6 +608,21 @@ std::vector<list_entry> build_list(list_kind kind)
 			}
 			res.push_back({v, map_location(), join({village_text(v), terrain_name(v)})});
 		}
+		break;
+	}
+	case L_KEEPS: {
+		for(int y = 0; y < gmap().h(); ++y) {
+			for(int x = 0; x < gmap().w(); ++x) {
+				map_location loc(x, y);
+				if(!gmap().is_keep(loc) || loc_shrouded(loc)) {
+					continue;
+				}
+				const unit* u = visible_unit(loc);
+				res.push_back({loc, map_location(),
+					join({_("keep"), u ? unit_title(*u) : std::string(_("empty"))})});
+			}
+		}
+		std::sort(res.begin(), res.end(), [](const list_entry& a, const list_entry& b) { return loc_less(a.loc, b.loc); });
 		break;
 	}
 	case L_LABELS: {
@@ -692,6 +707,7 @@ std::string list_name(list_kind kind)
 	case L_LABELS: return _("labels");
 	case L_REACH: return _("reachable destinations");
 	case L_TARGETS: return _("attack options");
+	case L_KEEPS: return _("keeps");
 	}
 	return std::string();
 }
@@ -1076,6 +1092,41 @@ void goto_selected()
 	set_cursor(sel, true);
 }
 
+/**
+ * Recruit and recall need a leader on a keep, and the game recruits onto the
+ * castle under the mouse. Point the hovered hex at the right castle, or
+ * explain what is missing; then the game's own dialog opens (returns false
+ * so the key continues to the game's hotkey).
+ */
+bool prepare_recruit(bool recall)
+{
+	if(g.pc->is_browsing()) {
+		return false; // the game answers "not available now"
+	}
+	const unit* leader_on_keep = nullptr;
+	for(const unit& u : board().units()) {
+		if(u.side() == viewing_side() && u.can_recruit() && gmap().is_keep(u.get_location())) {
+			leader_on_keep = &u;
+			break;
+		}
+	}
+	if(!leader_on_keep) {
+		speak(std::string(recall ? _("To recall") : _("To recruit")) + ", "
+			+ _("your leader must stand on a keep. Press K to find a keep, move your leader there, then try again."),
+			msg::reply);
+		cue("error");
+		return true;
+	}
+	// Keep the cursor if it is on a castle hex (the unit is placed there when
+	// it is free and connected); otherwise use the leader's keep.
+	map_location target = g.cursor;
+	if(!on_board(target) || !gmap().is_castle(target)) {
+		target = leader_on_keep->get_location();
+	}
+	sync_hover(target);
+	return false;
+}
+
 bool is_printable(const SDL_Event& event)
 {
 	const SDL_Keycode k = event.key.keysym.sym;
@@ -1130,6 +1181,11 @@ bool execute(command cmd)
 	case command::prev_reachable: cycle_list(L_REACH, -1); return true;
 	case command::next_target: cycle_list(L_TARGETS, 1); return true;
 	case command::prev_target: cycle_list(L_TARGETS, -1); return true;
+	case command::next_keep: cycle_list(L_KEEPS, 1); return true;
+	case command::prev_keep: cycle_list(L_KEEPS, -1); return true;
+	case command::recruit:
+	case command::recall:
+		return prepare_recruit(cmd == command::recall);
 	case command::objectives: speak_objectives(); return true;
 	case command::economy: speak(economy_text(), msg::reply); return true;
 	case command::time_of_day: speak(tod_text(), msg::reply); return true;
@@ -1622,7 +1678,16 @@ void on_overlay_text(const std::string& text)
 	if(!enabled()) {
 		return;
 	}
-	std::string t = plain_text(text);
+	// A caption line ("<b>Movement</b>" followed by a line break) becomes a sentence.
+	std::string sentences;
+	for(char c : text) {
+		if(c == '\n') {
+			sentences += ". ";
+		} else {
+			sentences += c;
+		}
+	}
+	std::string t = plain_text(sentences);
 	if(t.empty()) {
 		return;
 	}

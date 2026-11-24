@@ -74,6 +74,15 @@ expect village
 expect 4, 2
 
 mark
+key K
+expect keep, your Lieutenant
+expect 2, 4
+mark
+key K
+expect keep, empty
+expect 15, 4
+
+mark
 key Ctrl+F5
 expect Ford
 expect 3, 7

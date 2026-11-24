@@ -92,6 +92,7 @@ Ctrl+F5 / Ctrl+Shift+F5      Map labels (scenario locations)
 F6 / Shift+F6                Destinations the selected unit can reach this turn
 F7 / Shift+F7                Attack options of the selected unit: each enemy it can
                              attack and each free tile it can attack from
+K / Shift+K                  Keeps (castle centres where a leader must stand to recruit)
 
 Actions (always the game's own rules and dialogs)
 Enter              On one of your units: select it.
@@ -110,8 +111,10 @@ Ctrl+Space         End your turn
 U                  Undo
 R                  Redo
 T                  Continue an interrupted move
-Ctrl+R             Recruit (dialog)
-Alt+R              Recall (dialog)
+Ctrl+R             Recruit (dialog). Your leader must stand on a keep; if not,
+                   Wesnoth Access tells you so. The unit goes to the castle hex
+                   under the cursor if it is free, otherwise to a free castle hex.
+Alt+R              Recall (dialog), same rules
 Ctrl+J             Objectives dialog
 Alt+U              Unit list dialog
 Alt+S              Status table

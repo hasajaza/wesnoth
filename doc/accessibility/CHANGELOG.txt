@@ -6,6 +6,10 @@ Changes after the first JAWS test (same version number until release)
 - Escape with nothing selected needs a second press for the quit question.
 - Home goes to the leader when nothing is selected.
 - Popups without a title are no longer called "transient message".
+- K / Shift+K list the keeps; Ctrl+R and Alt+R explain when the leader is
+  not on a keep, and otherwise point the game at the right castle.
+- Tutorial hint titles are separated from the hint text.
+- A move is announced before the dialogue it triggers.
 
 0.1.0 (first test version, for Battle for Wesnoth 1.18.8)
 - Speech through JAWS, NVDA or SAPI with Universal Speech, on a worker thread.
