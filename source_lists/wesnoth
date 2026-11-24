@@ -3,6 +3,7 @@ accessibility/game_access.cpp
 accessibility/gui_access.cpp
 accessibility/keymap.cpp
 accessibility/speech.cpp
+accessibility/test_driver.cpp
 about.cpp
 achievements.cpp
 actions/advancement.cpp

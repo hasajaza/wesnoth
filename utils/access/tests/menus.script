@@ -1,0 +1,71 @@
+# Wesnoth Access end-to-end test: main menu and generic dialog navigation.
+#ARGS:
+
+wait-dialog 240000 title_screen
+expect Main menu
+expect Campaigns, button
+
+# Read the whole dialog: all main menu buttons are listed.
+mark
+key F4
+expect Campaigns
+expect Multiplayer
+expect Load
+expect Preferences
+expect Quit
+
+# Tab moves between controls and announces name and role.
+mark
+key Tab
+expect button
+key Tab
+key Shift+Tab
+expect button
+
+# Accessibility settings dialog (a normal GUI2 list).
+mark
+key Shift+F2
+wait-dialog 10000 simple_item_selector
+expect Accessibility Settings
+expect Speech engine
+mark
+key Down
+expect Use SAPI when no screen reader is running
+key Down
+expect Navigation interrupts speech
+mark
+key Escape
+wait-dialog 10000 title_screen
+
+# Command reference.
+mark
+key F2
+wait-dialog 10000 simple_item_selector
+expect Wesnoth Access Commands
+mark
+key Down
+key Down
+expect of
+key Escape
+wait-dialog 10000 title_screen
+
+# Campaign selection through the native hotkey (C), then back.
+mark
+key C
+wait-dialog 60000 campaign_selection
+expect tree view
+mark
+key Down
+expect Tale of Two Brothers
+expect Difficulty
+expect-not Difficulty::
+key Escape
+wait-dialog 20000 title_screen
+
+# Speech history review.
+mark
+key Shift+F12
+expect of
+key F12
+
+quit

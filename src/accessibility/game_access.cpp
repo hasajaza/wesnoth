@@ -468,7 +468,7 @@ void sync_hover(const map_location& loc)
 	mouse().access_hover(loc, g.pc->is_browsing());
 }
 
-void set_cursor(const map_location& loc, bool announce, const std::string& prefix = std::string())
+void set_cursor(map_location loc, bool announce, const std::string& prefix = std::string())
 {
 	if(!on_board(loc)) {
 		return;
@@ -1406,7 +1406,10 @@ void on_move(const unit* u, const map_location& from, const map_location& to, in
 	if(!active() || from == to) {
 		return;
 	}
-	const bool from_visible = on_board(from) && !loc_fogged(from);
+	// Visible start: the hex is not fogged and the unit was not hidden there
+	// (ambush, nightstalk...). A sighted player sees nothing else.
+	const bool from_visible = on_board(from) && !loc_fogged(from)
+		&& (!u || side == viewing_side() || !u->invisible(from));
 	const bool to_visible = u && visible_unit(to) == u;
 	if(!from_visible && !to_visible) {
 		return; // nothing a sighted player could see
@@ -1524,6 +1527,25 @@ void on_unit_placed(const unit& u, bool recall)
 		g.cursor = u.get_location();
 	}
 	event_message(text);
+}
+
+void on_undo_redo(bool done, bool redo)
+{
+	if(!active() || g.other_turn_side != 0) {
+		return;
+	}
+	if(!done) {
+		speak(redo ? _("Nothing to redo.") : _("Nothing to undo."), msg::reply);
+		cue("error");
+		return;
+	}
+	// The undone action is reverted silently by the engine; describe the cursor
+	// tile so the result can be checked.
+	std::string text = _("Undone");
+	if(const unit* u = visible_unit(g.cursor)) {
+		text += ". " + unit_brief(*u) + ", " + coords(g.cursor);
+	}
+	speak(text, msg::reply);
 }
 
 void on_advance(const unit& u)

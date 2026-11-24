@@ -1,0 +1,171 @@
+# Wesnoth Access end-to-end test: map review, information commands, hidden
+# information protection and RNG neutrality, on the access_test scenario.
+#ARGS: -t access_test
+
+# Units the player cannot see must never be announced: the enemy leader
+# (Orcish Warrior) is in fog and the Elvish Ranger hides in the forest.
+never enemy Orcish Warrior
+never Elvish Ranger
+
+wait-for 180000 Your turn
+expect Turn 1 of 10
+expect gold 100
+
+# The scenario shows its objectives in a dialog at the start; it is read out.
+mark
+wait-dialog 20000 transient_message
+wait 300
+key F4
+expect Defeat the orc leader
+key Enter
+wait 800
+
+# Information commands must not consume random numbers.
+rng-mark
+
+mark
+key F9
+expect Turn 1 of 10
+expect gold 100
+expect villages 0 of
+
+mark
+key F3
+expect Lieutenant
+expect 1 of 2
+
+mark
+key F3
+expect Spearman
+expect 2 of 2
+expect 4, 4
+
+# Hex navigation around the Spearman at 4,4 (even column).
+mark
+key W
+expect 4, 3
+key S
+expect 4, 4
+key E
+expect 5, 4
+# From an odd column north-west goes up one row: back to 4,4 with south-west.
+key A
+expect 4, 4
+key D
+expect 5, 5
+key A
+expect 4, 5
+expect Hills
+key Q
+expect 3, 5
+
+mark
+key C
+expect 3, 5
+
+mark
+key Backspace
+expect 4, 5
+
+# Village, label and item.
+mark
+key F5
+expect village
+expect 4, 2
+
+mark
+key Ctrl+F5
+expect Ford
+expect 3, 7
+
+mark
+key F4
+expect Orcish Grunt
+expect 7, 4
+expect 1 of 1
+
+mark
+key V
+expect enemy Orcish Grunt
+expect hit points
+expect attacks
+
+mark
+key Shift+V
+expect resistance
+
+mark
+key X
+expect Grass
+expect 7, 4
+
+mark
+key Z
+expect north
+expect south-west
+
+mark
+key Shift+C
+expect map 16 columns by 8 rows
+
+mark
+key F8
+expect Defeat the orc leader
+
+mark
+key Ctrl+F9
+expect 2 units
+expect 1 visible enemies
+
+rng-unchanged
+
+# Select the Spearman and look at its options.
+mark
+key Home
+expect No unit selected
+key F3
+key F3
+mark
+key Enter
+expect Selected
+expect Spearman
+expect reachable hexes
+
+mark
+key F6
+expect moves left
+expect 1 of
+
+mark
+key F7
+expect Orcish Grunt
+expect Press Enter to open the attack dialog
+
+rng-unchanged
+
+# Escape clears the selection.
+mark
+key Escape
+expect Selection cleared
+
+# Settings dialog and command reference are reachable from the map.
+mark
+key Shift+F2
+wait 1000
+expect Accessibility Settings
+key Escape
+wait 500
+
+mark
+key F2
+wait 1000
+expect Wesnoth Access Commands
+key Escape
+wait 500
+
+# Repeat and history.
+mark
+key F12
+expect Wesnoth Access Commands
+
+quit

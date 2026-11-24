@@ -1,0 +1,84 @@
+WESNOTH ACCESS - COMMAND IDENTIFIERS FOR access_key_bindings
+
+Format: identifier  (context)  default key  -  description
+
+help                   (global)  F2              - Accessibility command reference
+settings               (global)  Shift+F2        - Accessibility settings
+repeat_last            (global)  F12             - Repeat the last message
+history_back           (global)  Shift+F12       - Previous message in the speech history
+history_forward        (global)  Ctrl+Shift+F12  - Next message in the speech history
+dialogue_last          (global)  F11             - Repeat the last dialogue or story text
+dialogue_back          (global)  Shift+F11       - Previous dialogue line
+dialogue_forward       (global)  Ctrl+Shift+F11  - Next dialogue line
+stop_speech            (global)  none            - Stop speech (Control alone also works)
+gui_next               (dialog)  Tab             - Next control
+gui_prev               (dialog)  Shift+Tab       - Previous control
+gui_read_all           (dialog)  F4              - Read the whole dialog
+gui_describe           (dialog)  Shift+F4        - Describe the focused control in detail
+move_n                 (map   )  W               - Review cursor north
+move_ne                (map   )  E               - Review cursor north-east
+move_se                (map   )  D               - Review cursor south-east
+move_s                 (map   )  S               - Review cursor south
+move_sw                (map   )  A               - Review cursor south-west
+move_nw                (map   )  Q               - Review cursor north-west
+jump_n                 (map   )  Shift+W         - Jump north until the terrain or a unit changes
+jump_ne                (map   )  Shift+E         - Jump north-east until something changes
+jump_se                (map   )  Shift+D         - Jump south-east until something changes
+jump_s                 (map   )  Shift+S         - Jump south until something changes
+jump_sw                (map   )  Shift+A         - Jump south-west until something changes
+jump_nw                (map   )  Shift+Q         - Jump north-west until something changes
+select_action          (map   )  Enter           - Select the unit under the cursor, or move or attack with the selected unit
+cancel                 (map   )  Escape          - Deselect the selected unit (when nothing is selected: the normal Escape menu)
+describe_tile          (map   )  X               - Describe the tile under the cursor in detail
+describe_route         (map   )  Shift+X         - Describe the route of the selected unit to the cursor
+describe_unit          (map   )  V               - Describe the unit under the cursor
+describe_unit_full     (map   )  Shift+V         - Full unit details: attacks, resistances, abilities, traits, advancement
+where_am_i             (map   )  C               - Cursor coordinates and direction from the selected unit
+map_info               (map   )  Shift+C         - Map size and scenario name
+adjacent               (map   )  Z               - Describe the six tiles around the cursor
+goto_selected          (map   )  Home            - Cursor to the selected unit
+goto_leader            (map   )  Shift+Home      - Cursor to your leader
+goto_previous          (map   )  Backspace       - Cursor back to the previous location
+goto_coordinates       (map   )  Ctrl+G          - Jump to coordinates
+next_unit              (map   )  F3              - Next of your units
+prev_unit              (map   )  Shift+F3        - Previous of your units
+next_active_unit       (map   )  Ctrl+F3         - Next of your units that can still move or attack
+prev_active_unit       (map   )  Ctrl+Shift+F3   - Previous of your units that can still move or attack
+next_wounded           (map   )  Alt+F3          - Next wounded unit of yours
+prev_wounded           (map   )  Alt+Shift+F3    - Previous wounded unit of yours
+next_enemy             (map   )  F4              - Next visible enemy
+prev_enemy             (map   )  Shift+F4        - Previous visible enemy
+next_ally              (map   )  Ctrl+F4         - Next allied unit
+prev_ally              (map   )  Ctrl+Shift+F4   - Previous allied unit
+next_village           (map   )  F5              - Next known village
+prev_village           (map   )  Shift+F5        - Previous known village
+next_label             (map   )  Ctrl+F5         - Next labelled location
+prev_label             (map   )  Ctrl+Shift+F5   - Previous labelled location
+next_reachable         (map   )  F6              - Next destination the selected unit can reach
+prev_reachable         (map   )  Shift+F6        - Previous reachable destination
+next_target            (map   )  F7              - Next attack option of the selected unit (then Enter to attack)
+prev_target            (map   )  Shift+F7        - Previous attack option
+objectives             (map   )  F8              - Scenario objectives
+economy                (map   )  F9              - Turn, gold, income, upkeep and villages
+time_of_day            (map   )  Shift+F9        - Time of day and its effect on your units
+unit_counts            (map   )  Ctrl+F9         - Unit counts: yours, ready to act, wounded, visible enemies
+set_bookmark_1         (map   )  Ctrl+1          - Set bookmark 1 (also Ctrl+2 to Ctrl+9)
+set_bookmark_2         (map   )  Ctrl+2
+set_bookmark_3         (map   )  Ctrl+3
+set_bookmark_4         (map   )  Ctrl+4
+set_bookmark_5         (map   )  Ctrl+5
+set_bookmark_6         (map   )  Ctrl+6
+set_bookmark_7         (map   )  Ctrl+7
+set_bookmark_8         (map   )  Ctrl+8
+set_bookmark_9         (map   )  Ctrl+9
+goto_bookmark_1        (map   )  1               - Go to bookmark 1 (also 2 to 9)
+goto_bookmark_2        (map   )  2
+goto_bookmark_3        (map   )  3
+goto_bookmark_4        (map   )  4
+goto_bookmark_5        (map   )  5
+goto_bookmark_6        (map   )  6
+goto_bookmark_7        (map   )  7
+goto_bookmark_8        (map   )  8
+goto_bookmark_9        (map   )  9
+native_describe_unit   (map   )  Ctrl+Alt+D      - Open the game's own help page for the unit under the cursor (normally D)
+native_statistics      (map   )  Ctrl+Alt+S      - Open the game's statistics dialog (normally S)

@@ -82,6 +82,9 @@ void on_attack_end(const unit* attacker, const unit* defender, int attacker_xp, 
 /** A unit was recruited or recalled. */
 void on_unit_placed(const unit& u, bool recall);
 
+/** An undo or redo happened (@a done) or was impossible. */
+void on_undo_redo(bool done, bool redo);
+
 /** A unit advanced to a new type. */
 void on_advance(const unit& u);
 

@@ -18,10 +18,13 @@ on:
   pull_request:
     branches: [ wesnoth-access ]
 
-# One build per branch/PR at a time; a newer push cancels the older run.
+# One build per branch/PR at a time. A running build is allowed to finish
+# (so every pushed milestone gets a complete result); only the newest waiting
+# run is kept, older waiting runs are dropped. Pull request runs are cancelled
+# when superseded.
 concurrency:
   group: wesnoth-access-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -112,6 +115,7 @@ jobs:
             images
             sounds
             src/accessibility
+            utils/access
           sparse-checkout-cone-mode: true
 
       - uses: actions/download-artifact@v4
@@ -141,12 +145,45 @@ jobs:
           if (Test-Path $log) { Get-Content $log } else { "no self-test log produced"; exit 1 }
           if ($p.ExitCode -ne 0) { exit 1 }
 
-      - name: Upload self-test log
+      - name: Installer script (non-interactive, against the checked-out game data)
+        if: hashFiles('src/accessibility/version.hpp') != ''
+        shell: pwsh
+        run: |
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File out/WesnothAccess/install.ps1 -GameDir "$PWD"
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          Get-Content out/WesnothAccess/data-path.txt
+          if (-not (Test-Path (Join-Path ([Environment]::GetFolderPath("Desktop")) "Wesnoth Access.lnk"))) { "shortcut missing"; exit 1 }
+
+      - name: End-to-end accessibility test on Windows (dummy video driver)
+        if: hashFiles('src/accessibility/version.hpp') != ''
+        continue-on-error: true
+        shell: pwsh
+        env:
+          SDL_VIDEODRIVER: dummy
+          SDL_RENDER_DRIVER: software
+          SDL_AUDIODRIVER: dummy
+        run: |
+          New-Item -ItemType Directory -Force -Path e2e | Out-Null
+          $args = @('--data-dir', "$PWD", '--userdata-dir', "$PWD/e2e/userdata", '--nosound', '--nomusic', '--noaddons',
+                    '--resolution=1280x800', '--windowed', '-t', 'access_test',
+                    "--access-test-script=$PWD/utils/access/tests/map_basics.script",
+                    "--access-test-report=$PWD/e2e/map_basics.report",
+                    '--access-speech=log', "--access-speech-log=$PWD/e2e/map_basics.speech.log")
+          $p = Start-Process -FilePath out/WesnothAccess/wesnoth.exe -ArgumentList $args -Wait -PassThru -NoNewWindow
+          "exit code: $($p.ExitCode)"
+          if (Test-Path e2e/map_basics.report) { Get-Content e2e/map_basics.report | Select-String -Pattern '^(FAIL|SUMMARY)' } else { "no report" }
+          if ($p.ExitCode -ne 0) { exit 1 }
+
+      - name: Upload Windows test logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: windows-selftest-log
-          path: access-selftest.log
+          name: windows-test-logs
+          path: |
+            access-selftest.log
+            e2e/*.report
+            e2e/*.log
+            e2e/userdata/logs/*
           if-no-files-found: ignore
 
   linux-tests:
@@ -169,8 +206,9 @@ jobs:
           mkdir -p build-linux
           set -o pipefail
           docker run --rm -v "$PWD":/wesnoth -v "$PWD/build-linux":/output "$LINUX_IMAGE" \
-            sh -c 'cd /output && scons -j "$(nproc)" -Y /wesnoth build=release nls=false force_color=false \
-                   jobs="$(nproc)" wesnoth boost_unit_tests' 2>&1 | tee build-linux.log
+            sh -c 'rm -rf /usr/local/lib/cmake /usr/local/lib/libboost* /usr/local/include/boost && ldconfig && \
+                   cd /output && scons -j "$(nproc)" -Y /wesnoth build=release nls=false force_color=false \
+                   wesnoth boost_unit_tests' 2>&1 | tee build-linux.log
 
       - name: Save object cache
         if: always()
@@ -183,7 +221,7 @@ jobs:
         if: hashFiles('utils/access/run_access_tests.sh') != ''
         run: |
           docker run --rm -e SDL_VIDEODRIVER=dummy -e SDL_AUDIODRIVER=dummy -v "$PWD":/wesnoth -v "$PWD/build-linux":/output -w /wesnoth "$LINUX_IMAGE" \
-            sh /wesnoth/utils/access/run_access_tests.sh /output 2>&1 | tee access-tests.log
+            sh -c 'rm -rf /usr/local/lib/libboost* && ldconfig && sh /wesnoth/utils/access/run_access_tests.sh /output' 2>&1 | tee access-tests.log
 
       - name: Upload test logs
         if: always()

@@ -474,6 +474,9 @@ std::string control_name(const focusable& f)
 	}
 	if(name.empty()) {
 		name = f.label_hint;
+		while(!name.empty() && (name.back() == ':' || name.back() == ' ')) {
+			name.pop_back();
+		}
 	}
 	if(name.empty() && f.r != role::long_text && f.r != role::list) {
 		name = humanize(f.w->id());
@@ -572,7 +575,8 @@ std::string control_value(const focusable& f, bool for_snapshot)
 		if(for_snapshot) {
 			return text + "\x01" + state + "\x01" + std::to_string(reinterpret_cast<std::uintptr_t>(n));
 		}
-		return join({text, state, _("level") + std::string(" ") + std::to_string(n->get_indentation_level())});
+		const unsigned depth = n->get_indentation_level();
+		return join({text, state, depth > 1 ? _("depth") + std::string(" ") + std::to_string(depth) : std::string()});
 	}
 	case role::long_text:
 		return for_snapshot ? label_of(*static_cast<styled_widget*>(f.w)) : std::string();
@@ -707,11 +711,13 @@ void set_focus(window& win, window_state& st, const collection& c, int index, bo
 int initial_focus(window& win, const collection& c)
 {
 	(void)win;
-	// Prefer a list, tree or text field (where the native focus usually is), then an OK-like button.
-	for(std::size_t i = 0; i < c.controls.size(); ++i) {
-		role r = c.controls[i].r;
-		if((r == role::list || r == role::tree) && control_active(c.controls[i])) {
-			return static_cast<int>(i);
+	// Prefer a list, then a tree or text field (where the native focus usually
+	// is), then an OK-like button.
+	for(role wanted : {role::list, role::tree}) {
+		for(std::size_t i = 0; i < c.controls.size(); ++i) {
+			if(c.controls[i].r == wanted && control_active(c.controls[i])) {
+				return static_cast<int>(i);
+			}
 		}
 	}
 	for(std::size_t i = 0; i < c.controls.size(); ++i) {
@@ -806,6 +812,11 @@ bool dialog_active()
 	return !g_stack.empty();
 }
 
+std::string top_window_id()
+{
+	return g_stack.empty() ? std::string() : g_stack.back()->id();
+}
+
 void window_opened(window& win)
 {
 	if(win.mode() != window::show_mode::modal) {
@@ -820,9 +831,44 @@ void window_opened(window& win)
 		return;
 	}
 
+	if(win.id() == "loading_screen") {
+		// Loading happens in several short stages; say it once.
+		static uint32_t last_loading = 0;
+		uint32_t now = SDL_GetTicks();
+		if(last_loading == 0 || now - last_loading > 20000) {
+			speak(_("Loading"), msg::reply);
+		}
+		last_loading = now;
+		st.announced = true;
+		return;
+	}
+
 	collection c = collect_window(win);
 	std::string title = window_title(win, c);
 	std::vector<std::string> parts {title};
+
+	if(win.id() == "title_screen") {
+		// The main menu: start on "Campaigns"; the tip of the day is read with F4.
+		int idx = -1;
+		for(std::size_t i = 0; i < c.controls.size(); ++i) {
+			if(c.controls[i].w->id() == "campaign") {
+				idx = static_cast<int>(i);
+			}
+		}
+		if(idx < 0) {
+			idx = initial_focus(win, c);
+		}
+		if(idx >= 0) {
+			set_focus(win, st, c, idx, false);
+			parts.push_back(describe(c.controls[idx]));
+		}
+		parts.push_back(_("Press F4 to read the whole screen, F2 for help."));
+		cue("dialog");
+		speak(join(parts, ". "), msg::reply);
+		snapshot(win, c, st);
+		st.announced = true;
+		return;
+	}
 
 	if(is_message_window(win.id())) {
 		std::string content = content_text(c);

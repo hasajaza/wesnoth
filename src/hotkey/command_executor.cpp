@@ -14,6 +14,8 @@
 */
 
 #include "hotkey/command_executor.hpp"
+
+#include "accessibility/accessibility.hpp"
 #include "hotkey/hotkey_item.hpp"
 
 #include "gui/dialogs/achievements_dialog.hpp"
@@ -616,8 +618,14 @@ void command_executor::queue_command(const SDL_Event& event, int index)
 void command_executor::execute_command_wrap(const command_executor::queued_command& command)
 {
 	auto ui_cmd = hotkey::ui_command(*command.command, command.index);
-	if (!can_execute_command(ui_cmd)
-			|| do_execute_command(ui_cmd, command.press, command.release)) {
+	if (!can_execute_command(ui_cmd)) {
+		// Wesnoth Access: a blind player cannot see that a menu entry is greyed out.
+		if(command.press) {
+			accessibility::command_unavailable(command.command->description.str());
+		}
+		return;
+	}
+	if (do_execute_command(ui_cmd, command.press, command.release)) {
 		return;
 	}
 

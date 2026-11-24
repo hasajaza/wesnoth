@@ -20,6 +20,8 @@
 
 #include "actions/undo.hpp"
 
+#include "accessibility/game_access.hpp"
+
 #include "game_board.hpp"               // for game_board
 #include "game_display.hpp"          // for game_display
 #include "gui/dialogs/transient_message.hpp"
@@ -329,8 +331,11 @@ void undo_list::write(config & cfg) const
  */
 void undo_list::undo()
 {
-	if ( undos_.empty() )
+	if ( undos_.empty() ) {
+		// Wesnoth Access: say why nothing happened.
+		accessibility::game::on_undo_redo(false, false);
 		return;
+	}
 
 	const events::command_disabler disable_commands;
 
@@ -361,6 +366,9 @@ void undo_list::undo()
 		gui.invalidate_unit();
 		gui.invalidate_game_status();
 		gui.redraw_minimap();
+
+		// Wesnoth Access: confirm the undo.
+		accessibility::game::on_undo_redo(true, false);
 	}
 	else
 	{
@@ -386,6 +394,8 @@ void undo_list::undo()
 void undo_list::redo()
 {
 	if (redos_.empty()) {
+		// Wesnoth Access: say why nothing happened.
+		accessibility::game::on_undo_redo(false, true);
 		return;
 	}
 	// Get the action to redo.

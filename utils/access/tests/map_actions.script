@@ -1,0 +1,72 @@
+# Wesnoth Access end-to-end test: real game actions through the native code
+# paths: select, move and attack (native attack dialog), recruit (native
+# recruit dialog), end turn, enemy turn announcements.
+#ARGS: -t access_test
+
+never enemy Orcish Warrior
+# (The hidden Elvish Ranger may legitimately reveal itself by attacking during
+# the enemy turn, so it is only checked in map_basics.)
+
+wait-for 180000 Your turn
+wait-dialog 20000 transient_message
+key Enter
+wait 800
+
+# Select the Spearman.
+key F3
+key F3
+mark
+key Enter
+expect Selected your Spearman
+
+# Choose the attack option from 6,3 and open the native attack dialog.
+mark
+key F7
+expect from 6, 3
+key Enter
+wait-dialog 15000 unit_attack
+expect Attack
+mark
+key F4
+expect spear
+# Confirm: the unit moves next to the Grunt and attacks.
+mark
+key Enter
+wait-for 60000 gains
+expect moved to 6, 3
+expect attacks enemy Orcish Grunt
+expect to hit
+
+# Recruit with the native dialog (Ctrl+R).
+mark
+key Shift+Home
+expect Lieutenant
+mark
+key Ctrl+R
+wait-dialog 15000 unit_recruit
+expect Recruit
+# The focus starts in the list of recruitable units.
+expect list
+mark
+key Down
+expect Spearman
+mark
+key Enter
+wait-for 20000 recruited at
+expect Spearman
+expect gold 86
+
+# Undo with the native key U is confirmed (or refused) by speech.
+mark
+key U
+wait 1500
+expect Undo
+
+# End the turn (native Ctrl+Space); the enemy turn and the new turn are announced.
+mark
+key Ctrl+Space
+wait-for 120000 Enemy turn
+wait-for 180000 Your turn
+expect Turn 2 of 10
+
+quit

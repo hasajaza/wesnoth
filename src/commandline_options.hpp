@@ -61,6 +61,10 @@ public:
 	std::optional<std::string> access_speech;
 	/** Wesnoth Access: output file of the "log" speech backend, given with --access-speech-log. */
 	std::optional<std::string> access_speech_log;
+	/** Wesnoth Access: automated end-to-end test script given with --access-test-script. */
+	std::optional<std::string> access_test_script;
+	/** Wesnoth Access: report file of the end-to-end test, given with --access-test-report. */
+	std::optional<std::string> access_test_report;
 	/** Wesnoth Access: non-empty if --access-selftest was given. Tests speech output, writes a report to <arg> and exits. */
 	std::optional<std::string> access_selftest;
 	/** Non-empty if --bunzip2 was given on the command line. Uncompresses a .bz2 file and exits. */

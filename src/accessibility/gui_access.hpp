@@ -76,4 +76,7 @@ std::string read_all_text(gui2::window& w);
 /** True if a modal GUI2 window is currently being shown. */
 bool dialog_active();
 
+/** Id of the topmost modal GUI2 window, empty if none (tests). */
+std::string top_window_id();
+
 } // namespace accessibility::gui

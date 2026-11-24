@@ -31,7 +31,10 @@ import shutil
 import sys
 import zipfile
 
-DLL_SEARCH_PATHS = [pathlib.Path('/windows/mingw64/bin'), pathlib.Path('/msys64/mingw64/bin')]
+# The last entry holds the compiler runtime (libssp-0.dll), which upstream's
+# Dockerfile copies separately.
+DLL_SEARCH_PATHS = [pathlib.Path('/windows/mingw64/bin'), pathlib.Path('/msys64/mingw64/bin'),
+                    pathlib.Path('/usr/x86_64-w64-mingw32/bin')]
 
 
 def find_dll(name):
@@ -69,6 +72,41 @@ def collect_dlls(exe):
                 queue.append(path)
         pe.close()
     return sorted(found.values(), key=lambda p: p.name.lower())
+
+
+# DLLs that are part of every Windows 10/11 x64 installation.
+SYSTEM_DLLS = {
+    'advapi32.dll', 'crypt32.dll', 'kernel32.dll', 'msvcrt.dll', 'ole32.dll', 'oleaut32.dll', 'shell32.dll',
+    'shlwapi.dll', 'user32.dll', 'winmm.dll', 'ws2_32.dll', 'gdi32.dll', 'imm32.dll', 'setupapi.dll',
+    'version.dll', 'psapi.dll', 'rpcrt4.dll', 'dwrite.dll', 'usp10.dll', 'msimg32.dll', 'bcrypt.dll',
+    'iphlpapi.dll', 'wldap32.dll', 'normaliz.dll', 'secur32.dll', 'dnsapi.dll', 'comdlg32.dll',
+    'comctl32.dll', 'userenv.dll', 'cfgmgr32.dll', 'hid.dll', 'dbghelp.dll', 'mswsock.dll', 'ncrypt.dll',
+    'uxtheme.dll', 'dwmapi.dll', 'winspool.drv', 'gdiplus.dll', 'opengl32.dll', 'd3d9.dll', 'dxgi.dll',
+    'mfplat.dll', 'mfreadwrite.dll', 'avrt.dll', 'xinput1_4.dll', 'uuid.dll', 'wininet.dll', 'urlmon.dll',
+    'dinput8.dll', 'mmdevapi.dll', 'wtsapi32.dll', 'netapi32.dll', 'credui.dll',
+}
+
+
+def verify_imports(exe, dlls, speech_dir):
+    """Every import of every shipped module must be shipped or be a system DLL."""
+    import pefile
+    shipped = {d.name.lower() for d in dlls} | {'wesnoth.exe'}
+    modules = [pathlib.Path(exe)] + list(dlls)
+    for extra in ('UniversalSpeech.dll', 'nvdaControllerClient.dll'):
+        p = pathlib.Path(speech_dir) / extra
+        if p.exists():
+            modules.append(p)
+            shipped.add(extra.lower())
+    missing = set()
+    for mod in modules:
+        pe = pefile.PE(str(mod), fast_load=True)
+        pe.parse_data_directories(directories=[pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_IMPORT']])
+        for entry in getattr(pe, 'DIRECTORY_ENTRY_IMPORT', []):
+            name = entry.dll.decode().lower()
+            if name not in shipped and name not in SYSTEM_DLLS and not name.startswith('api-ms-win-'):
+                missing.add(f'{name} (needed by {mod.name})')
+        pe.close()
+    return missing
 
 
 def read_version(source):
@@ -141,6 +179,10 @@ def main():
     root = 'WesnothAccess'
 
     dlls = collect_dlls(args.exe)
+    missing = verify_imports(args.exe, dlls, speech)
+    if missing:
+        print('ERROR: unresolved non-system DLL imports: ' + ', '.join(sorted(missing)), file=sys.stderr)
+        sys.exit(1)
     print(f'Collected {len(dlls)} runtime DLLs:')
     for d in dlls:
         print('  ', d.name)

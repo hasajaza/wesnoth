@@ -1,0 +1,140 @@
+WESNOTH ACCESS @ACCESS_VERSION@ - KEYBOARD REFERENCE
+For Battle for Wesnoth @GAME_VERSION@
+
+The same list is available inside the game: press F2 anywhere.
+All accessibility keys can be changed, see "Changing keys" at the end.
+
+
+1. KEYS THAT WORK EVERYWHERE
+
+F2                 Command reference (a list you can read with the arrow keys)
+Shift+F2           Accessibility settings
+F12                Repeat the last message
+Shift+F12          Previous message in the speech history (press again to go further back)
+Ctrl+Shift+F12     Next message in the speech history
+F11                Repeat the last dialogue line or story text
+Shift+F11          Previous dialogue line
+Ctrl+Shift+F11     Next dialogue line
+Control            Stop speech (handled by JAWS or NVDA; also works with SAPI)
+Ctrl+Alt+A         Turn the accessibility layer off and on again
+F1                 The game's own help (unchanged)
+
+
+2. MENUS AND DIALOGS
+
+Tab                Next control
+Shift+Tab          Previous control
+Up and Down        Move in lists, tree views and menu buttons; read long text sentence by sentence
+Left and Right     Change sliders; open and close tree branches
+Home and End       First and last item, or start and end of a text
+Page Up, Page Down Scroll long lists
+Enter              Press the focused button; in lists usually confirms the dialog (OK)
+Space              Press the focused button or toggle the focused check box;
+                   in lists with check boxes, toggles the check box of the selected row
+Escape             Close the dialog (Cancel)
+F4                 Read the whole dialog: title, all texts and all controls
+Shift+F4           Describe the focused control in detail, with its position
+
+Text fields work normally. The screen reader echoes typed characters.
+Left and Right speak the character at the cursor, Backspace speaks the
+deleted character. Password fields never speak their contents.
+
+Dialogs are announced when they open: title, main text and the focused
+control. When a value changes (selected list row, slider, check box, the
+description of the selected campaign, a new story page) it is spoken.
+
+
+3. THE GAME MAP
+
+The review cursor is independent of your units: moving it never moves,
+selects or attacks anything. The game's own mouse highlight follows it, so
+the game's sidebar and its own keyboard commands act on the cursor tile.
+
+Review cursor
+W                  North
+E                  North-east
+D                  South-east
+S                  South
+A                  South-west
+Q                  North-west
+Shift+W/E/D/S/A/Q  Jump in that direction until the terrain changes or a unit,
+                   village or label is reached
+Home               Cursor to the selected unit
+Shift+Home         Cursor to your leader
+Backspace          Cursor back to the previous location
+Ctrl+G             Jump to coordinates (type column and row, for example 12 5)
+1 to 9             Go to bookmark 1 to 9
+Ctrl+1 to Ctrl+9   Set bookmark 1 to 9 at the cursor
+
+Information (nothing is changed by these keys)
+C                  Cursor coordinates, distance and direction from the selected unit and from your leader
+Shift+C            Scenario name and map size
+X                  Full description of the tile under the cursor
+Shift+X            Route of the selected unit to the cursor: length, turns, cost and directions
+V                  Unit under the cursor: type, name, side, level, hit points,
+                   experience, moves, attacks, alignment, traits, abilities, weapons
+Shift+V            Everything in V plus weapon specials, resistances, advancement,
+                   movement costs, terrain defense and vision
+Z                  The six tiles around the cursor
+F8                 Scenario objectives
+F9                 Turn, side, gold, income, upkeep and villages
+Shift+F9           Time of day and its effect
+Ctrl+F9            Unit counts: yours, ready to act, wounded, visible enemies
+
+Lists (each press moves the cursor to the next item and reads it; Shift goes back)
+F3 / Shift+F3                Your units (leader first)
+Ctrl+F3 / Ctrl+Shift+F3      Your units that can still move or attack
+Alt+F3 / Alt+Shift+F3        Your wounded units
+F4 / Shift+F4                Visible enemy units
+Ctrl+F4 / Ctrl+Shift+F4      Allied units
+F5 / Shift+F5                Known villages and their owners
+Ctrl+F5 / Ctrl+Shift+F5      Map labels (scenario locations)
+F6 / Shift+F6                Destinations the selected unit can reach this turn
+F7 / Shift+F7                Attack options of the selected unit: each enemy it can
+                             attack and each free tile it can attack from
+
+Actions (always the game's own rules and dialogs)
+Enter              On one of your units: select it.
+                   With a unit selected, on an empty reachable tile: move there.
+                   With a unit selected, on an enemy: open the attack dialog
+                   (after F7, from the attack position you chose).
+Escape             Deselect the selected unit. With nothing selected, Escape
+                   keeps its normal meaning (game menu / quit question).
+Ctrl+Alt+D         The game's own help page for the unit under the cursor
+Ctrl+Alt+S         The game's statistics dialog
+
+Unchanged game keys you will need
+N / Shift+N        Next / previous unit that can move (the game's own unit cycling)
+Space              End the selected unit's turn
+Ctrl+Space         End your turn
+U                  Undo
+R                  Redo
+T                  Continue an interrupted move
+Ctrl+R             Recruit (dialog)
+Alt+R              Recall (dialog)
+Ctrl+J             Objectives dialog
+Alt+U              Unit list dialog
+Alt+S              Status table
+Ctrl+S             Save game
+Ctrl+O             Load game
+Ctrl+P             Preferences
+Ctrl+Q             Quit to desktop
+Escape             Game menu, with nothing selected
+
+The keys W, E, D, S, A and Q replace two plain letter keys of the game in the
+map view: D (unit description) is available as Ctrl+Alt+D and S (statistics)
+as Ctrl+Alt+S. Ctrl+G (show grid, a visual setting) is used for "jump to
+coordinates". All other game keys keep working.
+
+
+4. CHANGING KEYS
+
+Key bindings are stored in the Wesnoth preferences file (preferences, in
+your Wesnoth user data folder) as the value access_key_bindings, a list of
+command=key entries separated by semicolons, for example:
+
+  access_key_bindings="move_n=Up;move_s=Down;next_unit=F3|Ctrl+U"
+
+Several keys for one command are separated by "|". Modifiers are Ctrl,
+Shift and Alt. The command names are listed in docs/COMMAND-IDS.txt.
+Edit the file only while the game is closed.

@@ -103,6 +103,9 @@ void set_enabled(bool on);
  */
 void speak(const std::string& text, msg kind = msg::reply);
 
+/** A native command was requested but is not available now (greyed out). */
+void command_unavailable(const std::string& description);
+
 /** Repeats the most recently spoken message. */
 void repeat_last();
 

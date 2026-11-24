@@ -1,0 +1,123 @@
+WESNOTH ACCESS @ACCESS_VERSION@ - INSTALLATION, STARTING AND RESTORING
+For Battle for Wesnoth @GAME_VERSION@ on Windows 10 or 11, 64-bit
+
+Build commit: @REVISION@
+
+
+WHAT YOU NEED
+
+- Windows 10 or Windows 11, 64-bit.
+- JAWS or NVDA. Without a running screen reader, Windows' own SAPI voice is used.
+- Battle for Wesnoth @GAME_VERSION@ already installed (the normal Windows
+  installer from wesnoth.org or the Steam version), when you use the small
+  "overlay" package. The "standalone" package contains the whole game and
+  needs no other installation.
+- About 120 MB of free disk space for the overlay package (about 45 MB
+  download), or about 1 GB for the standalone package.
+
+
+WHAT THE PACKAGE CONTAINS
+
+A folder named WesnothAccess with:
+- wesnoth.exe: Battle for Wesnoth @GAME_VERSION@ with the accessibility layer.
+- The libraries (DLL files) it needs, UniversalSpeech.dll (speech output) and
+  nvdaControllerClient.dll (NVDA support).
+- Install.cmd, Uninstall.cmd and Start Wesnoth Access.cmd.
+- docs: these instructions, the manual and the keyboard reference.
+- licenses: licence texts.
+
+Wesnoth Access never changes your original Wesnoth installation. It runs its
+own wesnoth.exe and only reads the game data of your installation. Saved
+games and preferences are shared with the normal game, so you can switch
+between the two at any time.
+
+
+DOWNLOADING FROM GITHUB
+
+Builds are produced automatically on GitHub Actions. With the GitHub command
+line tool (gh) you can download the newest one without a browser:
+
+  gh run download --repo hasajaza/wesnoth --name WesnothAccess-win64
+
+This writes one or two zip files into the current folder. When a release has
+been published, the same zip files are listed on the repository's Releases
+page.
+
+
+INSTALLING THE OVERLAY PACKAGE
+
+1. Extract the zip file, for example into your Documents folder. With the
+   keyboard: select the zip file in File Explorer, press the Applications key
+   (or Shift+F10), choose "Extract all", then press Enter.
+2. Open the extracted WesnothAccess folder and run Install.cmd (select it
+   and press Enter). A console window opens; your screen reader reads it.
+3. Setup searches for Battle for Wesnoth @GAME_VERSION@ in the usual places
+   (registry entries of the official installer, Program Files, Steam). If it
+   cannot find it, it asks you to type the folder that contains the game's
+   data folder, for example:
+     C:\Program Files\Battle for Wesnoth @GAME_VERSION@
+4. Setup creates a "Wesnoth Access" shortcut on the desktop and in the Start
+   menu, then waits for a key press.
+
+If PowerShell scripts are blocked on your computer, Install.cmd still works
+because it starts PowerShell with "-ExecutionPolicy Bypass" for this script
+only.
+
+
+INSTALLING THE STANDALONE PACKAGE
+
+Extract the zip file and run Install.cmd. Setup finds the game data in the
+same folder and only creates the shortcuts.
+
+
+STARTING THE GAME
+
+- Press Enter on the "Wesnoth Access" shortcut on the desktop, or
+- start "Start Wesnoth Access.cmd" in the WesnothAccess folder, or
+- from a command prompt in that folder:
+    wesnoth.exe --accessibility --data-dir "C:\Program Files\Battle for Wesnoth @GAME_VERSION@"
+
+You hear "Wesnoth Access ready. Press F2 for help." and then the main menu.
+The --accessibility option is remembered, so later starts are accessible even
+without it. To start without accessibility for one session use
+--no-accessibility. Ctrl+Alt+A turns the layer off and on at any time.
+
+Useful extra options:
+  --windowed                 run in a window instead of full screen
+  --access-speech=none       no speech (for sighted helpers)
+  --access-selftest=report.txt
+                             test speech output without starting the game,
+                             write a report and exit
+
+
+IF THERE IS NO SPEECH
+
+1. Make sure JAWS or NVDA is running before starting the game. If neither is
+   running, the Windows SAPI voice is used (can be turned off in Shift+F2).
+2. Run the speech self test in the WesnothAccess folder:
+     wesnoth.exe --access-selftest=selftest.txt
+   and read selftest.txt. It names the detected screen reader.
+3. Read the accessibility log:
+     Documents\My Games\Wesnoth1.18\logs\wesnoth-access.log
+   (the previous session's log is wesnoth-access.log.old). Send it when you
+   report a problem; it contains no passwords.
+4. NVDA needs nvdaControllerClient.dll in the WesnothAccess folder; JAWS is
+   reached through its own API and needs nothing extra.
+
+
+UNINSTALLING AND RESTORING
+
+Your original Battle for Wesnoth installation is never modified, so there is
+nothing to restore.
+1. Run Uninstall.cmd in the WesnothAccess folder. It removes the shortcuts.
+2. Delete the WesnothAccess folder.
+Saved games stay where they are and keep working with the normal game. The
+accessibility settings remain in the preferences file as entries starting
+with access_; the normal game ignores them.
+
+
+UPDATING
+
+Download the new package, run Uninstall.cmd in the old folder, delete the old
+folder, then install the new package as described above. Your game data is
+not downloaded again when you use the overlay package.

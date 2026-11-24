@@ -231,6 +231,8 @@ commandline_options::commandline_options(const std::vector<std::string>& args)
 		("access-speech", po::value<std::string>(), "selects the speech backend: auto (default), log, stdout or none.")
 		("access-speech-log", po::value<std::string>(), "file written by the 'log' speech backend.")
 		("access-selftest", po::value<std::string>(), "initializes speech output, speaks a test message, writes a report to <arg> and exits.")
+		("access-test-script", po::value<std::string>(), "runs an automated accessibility test script (developers).")
+		("access-test-report", po::value<std::string>(), "report file of --access-test-script.")
 		;
 
 	po::options_description campaign_opts("Campaign options");
@@ -343,6 +345,10 @@ commandline_options::commandline_options(const std::vector<std::string>& args)
 		access_speech = vm["access-speech"].as<std::string>();
 	if(vm.count("access-speech-log"))
 		access_speech_log = vm["access-speech-log"].as<std::string>();
+	if(vm.count("access-test-script"))
+		access_test_script = vm["access-test-script"].as<std::string>();
+	if(vm.count("access-test-report"))
+		access_test_report = vm["access-test-report"].as<std::string>();
 	if(vm.count("access-selftest"))
 		access_selftest = vm["access-selftest"].as<std::string>();
 	if(vm.count("bunzip2"))

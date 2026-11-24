@@ -16,6 +16,7 @@
 
 #include "accessibility/keymap.hpp"
 #include "accessibility/speech.hpp"
+#include "accessibility/test_driver.hpp"
 #include "accessibility/version.hpp"
 
 #include "commandline_options.hpp"
@@ -63,6 +64,13 @@ std::deque<dialogue_line> g_dialogue;
 int g_dialogue_pos = -1;
 
 const std::size_t max_history = 200;
+
+/** Speaks without recording in the history (repeat and review commands). */
+void say_direct(const std::string& text)
+{
+	speech::say(text, true);
+	test_driver::on_spoken(text);
+}
 
 std::string timestamp()
 {
@@ -184,6 +192,17 @@ manager::manager(const commandline_options& cmdline)
 	}
 
 	keymap::load(g_settings.key_bindings);
+
+	if(cmdline.access_test_script) {
+		// Automated tests: never use a real speech engine, never save settings.
+		g_settings.enabled = true;
+		if(!cmdline.access_speech) {
+			g_settings.speech_backend = "none";
+			g_backend_overridden = true;
+		}
+		test_driver::start(*cmdline.access_test_script,
+			cmdline.access_test_report ? *cmdline.access_test_report : std::string("access-test-report.txt"));
+	}
 
 	log("Wesnoth Access " ACCESS_VERSION_STRING " started " + timestamp());
 	log("base game version: " + game_config::revision);
@@ -350,6 +369,7 @@ void speak(const std::string& raw, msg kind)
 	}
 
 	speech::say(text, interrupt);
+	test_driver::on_spoken(text);
 	g_last = text;
 	g_last_time = now;
 	g_history.push_back(text);
@@ -360,15 +380,25 @@ void speak(const std::string& raw, msg kind)
 	debug("speak: " + text);
 }
 
+void command_unavailable(const std::string& description)
+{
+	if(!g_enabled) {
+		return;
+	}
+	std::string d = plain_text(description);
+	speak((d.empty() ? std::string(_("Command")) : d) + ": " + _("not available now"), msg::reply);
+	cue("error");
+}
+
 void repeat_last()
 {
 	if(!g_enabled) {
 		return;
 	}
 	if(g_last.empty()) {
-		speech::say(_("Nothing to repeat."), true);
+		say_direct(_("Nothing to repeat."));
 	} else {
-		speech::say(g_last, true);
+		say_direct(g_last);
 	}
 }
 
@@ -378,7 +408,7 @@ void review_history(int direction)
 		return;
 	}
 	if(g_history.empty()) {
-		speech::say(_("No messages yet."), true);
+		say_direct(_("No messages yet."));
 		return;
 	}
 	int n = static_cast<int>(g_history.size());
@@ -393,7 +423,7 @@ void review_history(int direction)
 		g_history_pos = n - 1;
 		cue("edge");
 	}
-	speech::say(std::to_string(g_history_pos + 1) + " of " + std::to_string(n) + ": " + g_history[g_history_pos], true);
+	say_direct(std::to_string(g_history_pos + 1) + " of " + std::to_string(n) + ": " + g_history[g_history_pos]);
 }
 
 void add_dialogue(const std::string& speaker, const std::string& text)
@@ -420,7 +450,7 @@ void review_dialogue(int direction)
 		return;
 	}
 	if(g_dialogue.empty()) {
-		speech::say(_("No dialogue yet."), true);
+		say_direct(_("No dialogue yet."));
 		return;
 	}
 	int n = static_cast<int>(g_dialogue.size());
@@ -441,7 +471,7 @@ void review_dialogue(int direction)
 	}
 	const dialogue_line& l = g_dialogue[g_dialogue_pos];
 	std::string text = l.speaker.empty() ? l.text : l.speaker + ": " + l.text;
-	speech::say(_("Dialogue") + std::string(" ") + std::to_string(g_dialogue_pos + 1) + " of " + std::to_string(n) + ". " + text, true);
+	say_direct(_("Dialogue") + std::string(" ") + std::to_string(g_dialogue_pos + 1) + " of " + std::to_string(n) + ". " + text);
 }
 
 std::size_t dialogue_count()
