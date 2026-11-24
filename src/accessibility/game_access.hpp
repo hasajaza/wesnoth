@@ -85,6 +85,9 @@ void on_unit_placed(const unit& u, bool recall);
 /** An undo or redo happened (@a done) or was impossible. */
 void on_undo_redo(bool done, bool redo);
 
+/** A unit was healed (amount > 0), harmed by poison (amount < 0) and/or cured, at the start of a turn. */
+void on_heal(const unit& u, int amount, bool cured);
+
 /** A unit advanced to a new type. */
 void on_advance(const unit& u);
 

@@ -83,5 +83,7 @@ key Ctrl+Space
 wait-for 120000 Enemy turn
 wait-for 180000 Your turn
 expect Turn 2 of 10
+# The leader rested on its keep: the healing is part of the turn announcement.
+expect Lieutenant Leader, leader, heals 2, 32 of 40 hit points
 
 quit

@@ -72,6 +72,8 @@ struct game_state_access
 	int other_turn_side = 0;
 	bool suppress_text_input = false;
 	bool in_combat = false;
+	/** Healing results collected at the start of a side turn. */
+	std::vector<std::string> heal_lines;
 	map_location last_selected;
 	std::string last_selected_id;
 	bool combat_visible = false;
@@ -1286,6 +1288,9 @@ void on_human_turn_start(play_controller& pc)
 	cue("turn");
 	std::vector<std::string> parts;
 	parts.push_back(_("Your turn"));
+	// Healing and poison happened before the turn began.
+	std::vector<std::string> heals;
+	heals.swap(g.heal_lines);
 	if(prefs().turn_summary) {
 		parts.push_back(economy_text());
 		parts.push_back(tod_text());
@@ -1293,6 +1298,7 @@ void on_human_turn_start(play_controller& pc)
 	} else {
 		parts.push_back(_("Turn") + std::string(" ") + report("turn").text);
 	}
+	parts.insert(parts.end(), heals.begin(), heals.end());
 	speak(join(parts, ". "), msg::important);
 	log("human turn start: side " + std::to_string(pc.current_side()));
 }
@@ -1304,10 +1310,17 @@ void on_other_turn_start(play_controller& pc, int side)
 	}
 	g.other_turn_log.clear();
 	g.other_turn_side = side;
+	std::vector<std::string> heals;
+	heals.swap(g.heal_lines);
 	if(prefs().enemy_verbosity >= 1) {
-		const team& t = board().get_team(side);
 		std::string who = viewer().is_enemy(side) ? _("Enemy turn") : _("Allied turn");
-		speak(who + ": " + side_label(side) + (t.side_name().empty() ? "" : ""), msg::event);
+		std::vector<std::string> parts {who + ": " + side_label(side)};
+		if(prefs().enemy_verbosity >= 2) {
+			parts.insert(parts.end(), heals.begin(), heals.end());
+		} else {
+			g.other_turn_log.insert(g.other_turn_log.end(), heals.begin(), heals.end());
+		}
+		speak(join(parts, ". "), msg::event);
 	}
 }
 
@@ -1549,6 +1562,26 @@ void on_undo_redo(bool done, bool redo)
 		text += ". " + unit_brief(*u) + ", " + coords(g.cursor);
 	}
 	speak(text, msg::reply);
+}
+
+void on_heal(const unit& u, int amount, bool cured)
+{
+	if(!active() || visible_unit(u.get_location()) != &u) {
+		return;
+	}
+	std::vector<std::string> parts {unit_title(u)};
+	if(cured) {
+		parts.push_back(_("cured of poison"));
+	}
+	if(amount > 0) {
+		parts.push_back(_("heals") + std::string(" ") + std::to_string(amount));
+	} else if(amount < 0) {
+		parts.push_back(_("loses") + std::string(" ") + std::to_string(-amount) + " " + _("hit points to poison"));
+	}
+	if(amount != 0) {
+		parts.push_back(hp_text(u));
+	}
+	g.heal_lines.push_back(join(parts));
 }
 
 void on_advance(const unit& u)

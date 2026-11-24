@@ -20,6 +20,8 @@
 
 #include "actions/heal.hpp"
 
+#include "accessibility/game_access.hpp"
+
 #include "gettext.hpp"
 #include "log.hpp"
 #include "map/map.hpp"
@@ -237,6 +239,9 @@ namespace {
 		else if ( amount < 0 )
 			patient.take_hit(-amount);
 		game_display::get_singleton()->invalidate_unit();
+
+		// Wesnoth Access: report healing, regeneration, curing and poison damage.
+		accessibility::game::on_heal(patient, amount, cure_poison);
 	}
 
 
