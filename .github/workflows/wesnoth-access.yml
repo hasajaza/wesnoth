@@ -1,0 +1,197 @@
+name: Wesnoth Access
+
+# Builds the Wesnoth Access Windows x64 package by cross-compiling with the
+# same MinGW docker image that upstream Wesnoth uses for its Windows builds,
+# runs the automated tests on Linux, and smoke-tests the produced Windows
+# executable on a real Windows runner.
+
+on:
+  workflow_dispatch:
+    inputs:
+      standalone:
+        description: "Also build the large standalone package (includes all game data)"
+        type: boolean
+        default: false
+  push:
+    branches: [ wesnoth-access, "claude/**" ]
+    paths-ignore: [ "doc/accessibility/**", "ACCESSIBILITY_PROGRESS.md" ]
+  pull_request:
+    branches: [ wesnoth-access ]
+
+# One build per branch/PR at a time; a newer push cancels the older run.
+concurrency:
+  group: wesnoth-access-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Pinned by digest for reproducibility (tags mingw-master / 2204-master).
+  MINGW_IMAGE: wesnoth/wesnoth@sha256:e60050f3ab2f37004716547540fac8600a18db751eb1d0a34d262819b097fa8b
+  LINUX_IMAGE: wesnoth/wesnoth@sha256:958e7a4fa1933f207db2223a7ab85ffaf841e4cc46639634e4f2b24cc4417fa0
+  US_COMMIT: 25e8b49c2f9df67f8baa0fbcb25fb1a0f1a3a558
+
+jobs:
+  windows-build:
+    name: Windows x64 build (MinGW cross-compile)
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+        with: { submodules: recursive }
+
+      - name: Restore object cache
+        uses: actions/cache/restore@v4
+        with:
+          path: build-mingw
+          key: access-mingw-v1-${{ github.sha }}
+          restore-keys: access-mingw-v1-
+
+      - name: Pull build image
+        run: docker pull "$MINGW_IMAGE"
+
+      - name: Compile wesnoth.exe
+        run: |
+          mkdir -p build-mingw
+          set -o pipefail
+          docker run --rm -v "$PWD":/wesnoth -v "$PWD/build-mingw":/output "$MINGW_IMAGE" \
+            sh -c 'cd /output && scons -j "$(nproc)" arch=x86-64 prefix=/msys64/mingw64 gtkdir=/msys64/mingw64 \
+                   host=x86_64-w64-mingw32 -Y /wesnoth build=release nls=false force_color=false wesnoth' \
+            2>&1 | tee build-mingw.log
+          ls -la build-mingw/wesnoth.exe
+
+      - name: Save object cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: build-mingw
+          key: access-mingw-v1-${{ github.sha }}
+
+      - name: Build speech dependencies
+        run: |
+          mkdir -p speech
+          docker run --rm -e US_COMMIT -v "$PWD":/wesnoth -v "$PWD/speech":/speech "$MINGW_IMAGE" \
+            sh /wesnoth/packaging/access/build_speech_deps.sh /speech
+
+      - name: Package
+        run: |
+          mkdir -p dist
+          extra=""
+          if [ "${{ github.event.inputs.standalone }}" = "true" ]; then extra="--standalone"; fi
+          docker run --rm -v "$PWD":/wesnoth -v "$PWD/build-mingw":/output -v "$PWD/speech":/speech -v "$PWD/dist":/dist "$MINGW_IMAGE" \
+            python3 /wesnoth/packaging/access/make_package.py --exe /output/wesnoth.exe --source /wesnoth \
+              --speech-dir /speech --out /dist --revision "${{ github.sha }}" $extra
+          ls -la dist
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: WesnothAccess-win64
+          path: dist/*.zip
+          compression-level: 0
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log-mingw
+          path: build-mingw.log
+
+  windows-smoke-test:
+    name: Windows runtime smoke test
+    needs: windows-build
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            data
+            fonts
+            images
+            sounds
+            src/accessibility
+          sparse-checkout-cone-mode: true
+
+      - uses: actions/download-artifact@v4
+        with: { name: WesnothAccess-win64, path: pkg }
+
+      - name: Unpack
+        shell: pwsh
+        run: |
+          $zip = Get-ChildItem pkg -Filter *-overlay.zip | Select-Object -First 1
+          Expand-Archive $zip.FullName -DestinationPath out
+          Get-ChildItem out/WesnothAccess | Format-Table Name, Length
+
+      - name: Version
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath out/WesnothAccess/wesnoth.exe -ArgumentList '--data-dir', "$PWD", '--version', '--log-to-file' -Wait -PassThru -NoNewWindow
+          "exit code: $($p.ExitCode)"
+          if ($p.ExitCode -ne 0) { exit 1 }
+
+      - name: Speech self-test (Universal Speech / SAPI on runner)
+        if: hashFiles('src/accessibility/version.hpp') != ''
+        shell: pwsh
+        run: |
+          $log = "$PWD/access-selftest.log"
+          $p = Start-Process -FilePath out/WesnothAccess/wesnoth.exe -ArgumentList '--data-dir', "$PWD", '--access-selftest', "$log", '--log-to-file' -Wait -PassThru -NoNewWindow
+          "exit code: $($p.ExitCode)"
+          if (Test-Path $log) { Get-Content $log } else { "no self-test log produced"; exit 1 }
+          if ($p.ExitCode -ne 0) { exit 1 }
+
+      - name: Upload self-test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-selftest-log
+          path: access-selftest.log
+          if-no-files-found: ignore
+
+  linux-tests:
+    name: Linux build and automated tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+        with: { submodules: recursive }
+
+      - name: Restore object cache
+        uses: actions/cache/restore@v4
+        with:
+          path: build-linux
+          key: access-linux-v1-${{ github.sha }}
+          restore-keys: access-linux-v1-
+
+      - name: Build wesnoth and boost unit tests
+        run: |
+          mkdir -p build-linux
+          set -o pipefail
+          docker run --rm -v "$PWD":/wesnoth -v "$PWD/build-linux":/output "$LINUX_IMAGE" \
+            sh -c 'cd /output && scons -j "$(nproc)" -Y /wesnoth build=release nls=false force_color=false \
+                   jobs="$(nproc)" wesnoth boost_unit_tests' 2>&1 | tee build-linux.log
+
+      - name: Save object cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: build-linux
+          key: access-linux-v1-${{ github.sha }}
+
+      - name: Run accessibility tests
+        if: hashFiles('utils/access/run_access_tests.sh') != ''
+        run: |
+          docker run --rm -e SDL_VIDEODRIVER=dummy -e SDL_AUDIODRIVER=dummy -v "$PWD":/wesnoth -v "$PWD/build-linux":/output -w /wesnoth "$LINUX_IMAGE" \
+            sh /wesnoth/utils/access/run_access_tests.sh /output 2>&1 | tee access-tests.log
+
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-test-logs
+          path: |
+            access-tests.log
+            build-linux.log
+            build-linux/access-test-output/**
+          if-no-files-found: ignore
