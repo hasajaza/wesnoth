@@ -35,7 +35,8 @@ $1"
 
 # 1. Unit tests -------------------------------------------------------------
 if [ -x "$BIN/boost_unit_tests" ]; then
-	if (cd "$OUT" && "$BIN/boost_unit_tests" --run_test=test_accessibility --log_level=test_suite > "$OUT/unit-tests.log" 2>&1); then
+	# The unit tests load game data relative to the source tree.
+	if (cd "$SRC" && "$BIN/boost_unit_tests" --run_test=test_accessibility --log_level=test_suite > "$OUT/unit-tests.log" 2>&1); then
 		note "PASS unit tests (test_accessibility)"
 	else
 		note "FAIL unit tests (test_accessibility), see unit-tests.log"
