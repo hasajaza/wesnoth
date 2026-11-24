@@ -35,11 +35,12 @@ between the two at any time.
 DOWNLOADING FROM GITHUB
 
 Builds are produced automatically on GitHub Actions. With the GitHub command
-line tool (gh) you can download the newest one without a browser:
+line tool (gh) you can download the newest successful one without a browser.
+In PowerShell, in the folder where the zip file should go:
 
-  gh run download --repo hasajaza/wesnoth --name WesnothAccess-win64
+  gh run download $(gh run list --repo hasajaza/wesnoth --workflow wesnoth-access.yml --branch wesnoth-access --status success --limit 1 --json databaseId --jq ".[0].databaseId") --repo hasajaza/wesnoth --name WesnothAccess-win64
 
-This writes one or two zip files into the current folder. When a release has
+This writes the zip file(s) into the current folder. When a release has
 been published, the same zip files are listed on the repository's Releases
 page.
 
