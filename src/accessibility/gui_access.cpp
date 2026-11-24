@@ -800,8 +800,28 @@ std::string read_all_text(window& win)
 	// Interleave texts and controls in reading order is not tracked; read texts first, then controls.
 	parts.push_back(static_text(c, title));
 	for(const focusable& f : c.controls) {
-		if(f.r != role::long_text) {
-			parts.push_back(describe(f));
+		if(f.r == role::long_text) {
+			continue;
+		}
+		parts.push_back(describe(f));
+		if(f.r == role::list) {
+			// All choices, in display order (for example the advancement options).
+			auto* l = static_cast<listbox*>(f.w);
+			generator_base* gen = list_generator(*l);
+			const unsigned n = l->get_item_count();
+			std::vector<std::string> rows;
+			for(unsigned ordered = 0; ordered < n && rows.size() < 60; ++ordered) {
+				unsigned idx = gen ? gen->get_item_at_ordered(ordered) : ordered;
+				if(idx >= n || (gen && !gen->get_item_shown(idx))) {
+					continue;
+				}
+				if(grid* g = l->get_row_grid(idx)) {
+					rows.push_back(row_text(*g));
+				}
+			}
+			if(!rows.empty()) {
+				parts.push_back(_("items") + std::string(": ") + join(rows, "; "));
+			}
 		}
 	}
 	return join(parts, ". ");

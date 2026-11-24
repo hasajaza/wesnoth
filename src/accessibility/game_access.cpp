@@ -466,6 +466,9 @@ void sync_hover(const map_location& loc)
 	}
 	disp().scroll_to_tile(loc, display::ONSCREEN, false, false);
 	mouse().access_hover(loc, g.pc->is_browsing());
+	if(mouse().get_last_hex() != loc) {
+		log("hover not applied: wanted " + coords(loc) + ", native hover is " + coords(mouse().get_last_hex()));
+	}
 }
 
 void set_cursor(map_location loc, bool announce, const std::string& prefix = std::string())

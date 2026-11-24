@@ -50,6 +50,7 @@ expect of 3
 mark
 key Enter
 wait-for 20000 advanced to
+wait 4000
 
 # Recruit with the native dialog (Ctrl+R).
 mark
