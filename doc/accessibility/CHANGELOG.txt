@@ -1,0 +1,18 @@
+WESNOTH ACCESS CHANGELOG
+
+0.1.0 (first test version, for Battle for Wesnoth 1.18.8)
+- Speech through JAWS, NVDA or SAPI with Universal Speech, on a worker thread.
+- All GUI2 menus and dialogs usable with Tab, arrows, Enter, Space, Escape;
+  F4 reads the whole dialog.
+- Story, character dialogue and objectives read automatically; dialogue
+  history with F11.
+- Map review cursor with six-direction hex movement, tile and unit
+  descriptions, lists of units, enemies, villages, labels, reachable hexes
+  and attack options, bookmarks, jump to coordinates.
+- Select, move, attack, recruit through the game's own code; strike-by-
+  strike combat results; healing, advancement, undo feedback; enemy turn
+  announcements limited to what is visible.
+- Keyboard reader for the game's help.
+- Accessibility settings, command reference, configurable keys, log file.
+- Compact package for an existing 1.18.8 installation, with installer and
+  uninstaller; nothing in the original installation is changed.

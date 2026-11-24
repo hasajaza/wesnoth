@@ -56,29 +56,44 @@ Engine files touched (all changes are marked with "Wesnoth Access" comments):
 
 ## Status
 
-See the "Feature coverage" section of `doc/accessibility/FEATURES.txt` for the
-per-feature status (implemented / compiled / automatically tested / manually
-tested). Summary of milestones:
+Per-feature status: `doc/accessibility/FEATURES.txt`. Limitations and next
+steps: `doc/accessibility/KNOWN-LIMITATIONS.txt`.
 
 | Milestone | State |
 |---|---|
-| Baseline Windows build of unmodified 1.18.8 (local MinGW docker) | done, compiled |
-| CI workflow (Windows package, Windows smoke test, Linux tests) | written, runs on GitHub Actions |
-| Speech layer (Universal Speech, worker thread, self test) | implemented, compiled; unit tested on Linux (log backend); Windows self test runs in CI |
-| GUI2 generic accessibility | implemented, compiled; end-to-end tests on Linux |
-| Map review cursor and commands | implemented, compiled; end-to-end tests on Linux |
-| Event announcements (moves, combat, recruit, advance, turns) | implemented, compiled; partly covered by tests |
-| Packaging (overlay zip, scripts, docs) | implemented |
-| Real JAWS/NVDA testing | NOT DONE — needs the user (see TESTING-CHECKLIST.txt) |
+| Baseline Windows build of unmodified 1.18.8 (local MinGW docker) | done |
+| CI: Windows package, Windows smoke + end-to-end tests, Linux tests | working (runs 3 and 4 green; test step exit codes fixed after run 4) |
+| Speech (Universal Speech, worker thread) | done; Windows runner: library loads, SAPI5 speaks |
+| Generic GUI2 dialogs | done; automated tests |
+| Legacy help browser reader | done; automated test |
+| Map review cursor, info commands, lists | done; automated tests on Linux and Windows |
+| Actions (select, move, attack, recruit, advance, undo, end turn) | done; automated tests |
+| Event announcements (combat, moves, heal, turns, enemy turn) | done; automated tests |
+| Packaging (overlay zip, installer, docs) | done; installer tested on Windows runner |
+| Real JAWS/NVDA testing | NOT DONE — needs the user (TESTING-CHECKLIST.txt) |
+
+## Test results (latest local run)
+
+- Unit tests (Boost, test_accessibility): 8/8 pass.
+- End-to-end (utils/access/tests): map_basics 66, map_actions 29,
+  menus 27, campaign_start 28 checks, all pass (Linux).
+- Windows runner (CI run 4): map_basics 56/56 on the real Windows binary,
+  speech self test PASS (SAPI5), installer OK.
+- Upstream WML unit test suite: passes with accessibility disabled and
+  enabled (CI run 4).
 
 ## Build/test log
 
 - Local MinGW baseline build of unmodified source: success (wesnoth.exe PE32+ x86-64).
 - Local MinGW build with accessibility layer: success, no new warnings.
-- Overlay package built locally: 43.6 MB zip, 70 runtime DLLs, all imports verified.
-- Found and fixed: missing `libssp-0.dll` in the package (would have prevented start).
-- Linux CI build failed initially because of the debug Boost in the upstream
-  image; fixed by removing it like upstream's cmake job does.
+- Overlay package: about 44 MB zip, 70 runtime DLLs, all imports verified.
+- Fixed: missing `libssp-0.dll` in the package; debug Boost of the Linux CI
+  image; test step exit code hidden by `tee`; unit tests needed the source
+  tree as working directory.
+- Bugs found by the end-to-end tests and fixed: previous-location aliasing,
+  possible announcement of moves by invisible units, recruit dialog focus,
+  repeated loading announcements, label hints with colons, F4 not reading
+  all list items, silent undo.
 
 ## Known problems / next steps
 

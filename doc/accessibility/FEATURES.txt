@@ -1,0 +1,69 @@
+WESNOTH ACCESS @ACCESS_VERSION@ - FEATURE COVERAGE
+
+Status columns:
+  I = implemented     C = compiles for Windows x64 (and Linux)
+  A = covered by automated tests (Linux; "W" = also on the Windows runner)
+  M = manually tested with JAWS/NVDA   (not done yet for any feature)
+
+Feature                                                    I C A   M
+---------------------------------------------------------- - - --- -
+Speech: Universal Speech (JAWS, NVDA, SAPI fallback)       I C W   -
+  (Windows runner: library loads, SAPI5 detected, speaks)
+Speech worker thread, interrupt/queue/stop                 I C A   -
+Repeat last message, speech history                        I C A   -
+Accessibility log, debug logging                           I C A   -
+--accessibility / --no-accessibility / Ctrl+Alt+A          I C A   -
+Accessibility settings dialog (persistent)                 I C A   -
+Command reference (F2)                                     I C A   -
+Configurable key bindings (preferences)                    I C A   -
+Optional audio cues                                        I C -   -
+
+Generic GUI2 dialogs: Tab focus, roles, states, values     I C A   -
+  buttons, check boxes, lists, trees, menu buttons         I C A   -
+  sliders, text and password fields, spin boxes            I C -   -
+Dialog open/close announcements, read whole dialog (F4)    I C A   -
+Change announcements (selection, description, story)       I C A   -
+Main menu                                                  I C A   -
+Campaign selection and difficulty                          I C A   -
+Story screens                                              I C A   -
+Character dialogue ([message]), dialogue history           I C A   -
+Dialogue choices (option lists in messages)                I C -   -
+Objectives dialog and F8                                   I C A   -
+Save game, load game                                       I C A   -
+Attack dialog (weapons, retaliation, predictions text)     I C A   -
+Advancement dialog                                         I C A   -
+Recruit dialog                                             I C A   -
+Recall dialog                                              I C -   -
+Preferences, language, add-ons, multiplayer dialogs        I C -   -
+Victory/defeat messages, scenario transitions              I C -   -
+Help browser (legacy): topics, paragraphs, links           I C A   -
+"Command not available now" for disabled game commands     I C A   -
+
+Map review cursor, six directions, edges, jumps            I C AW  -
+Tile description (terrain, village owner, labels, items)   I C AW  -
+Fog/shroud and hidden unit protection                      I C AW  -
+Unit description (sidebar reports: HP, XP, weapons,        I C AW  -
+  resistances, abilities, traits, advancement)
+Lists: units, active, wounded, allies, enemies, villages,  I C AW  -
+  labels, reachable hexes, attack options
+Jump to coordinates, bookmarks, previous location          I C A   -
+Route description (Shift+X)                                I C -   -
+Economy, time of day, unit counts, turn summary            I C AW  -
+Select unit, move through native mouse handler             I C A   -
+Attack from a chosen hex through native attack dialog      I C A   -
+Combat results strike by strike, experience                I C A   -
+Recruit announcement with gold                             I C A   -
+Undo feedback                                              I C A   -
+Advancement announcement                                   I C A   -
+Healing, regeneration, poison at turn start                I C A   -
+Enemy/allied turn announcements (visible actions only)     I C A   -
+Ambush, units sighted and other floating announcements     I C -   -
+Chat and scripted messages                                 I C -   -
+Information commands do not change the game state or       I C AW  -
+  use random numbers (checked with the scenario RNG and
+  the replay)
+Game rules unchanged: the complete upstream WML unit       I C A   -
+  test suite passes with accessibility off and on
+
+Packaging: overlay zip, installer, uninstaller, launcher   I C W   -
+Standalone zip (workflow option)                           I C -   -

@@ -209,6 +209,8 @@ def main():
             add_file(zf, f, f'{root}/{f.name}', text=True, subst=subst)
         for f in sorted(docsrc.glob('*.txt')):
             add_file(zf, f, f'{root}/docs/{f.name}', text=True, subst=subst)
+        if (docsrc / 'README.txt').exists():
+            add_file(zf, docsrc / 'README.txt', f'{root}/README.txt', text=True, subst=subst)
         info = (f'Wesnoth Access {aversion}\n'
                 f'Base game version: {version}\n'
                 f'Build commit: {args.revision}\n'

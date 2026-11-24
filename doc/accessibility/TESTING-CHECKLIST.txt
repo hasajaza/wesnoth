@@ -1,0 +1,94 @@
+WESNOTH ACCESS @ACCESS_VERSION@ - MANUAL TEST CHECKLIST FOR JAWS AND NVDA
+
+Please run this list once with NVDA and once with JAWS. For each line note
+OK, or what you heard instead. When something goes wrong, note the time and
+send the file Documents\My Games\Wesnoth1.18\logs\wesnoth-access.log.
+It takes about one hour per screen reader.
+
+Before you start: turn on Debug logging in Shift+F2 (settings), item 11.
+
+
+A. INSTALLATION AND START
+ A1  Install.cmd finds your Wesnoth 1.18.8 installation (or accepts the
+     typed folder) and creates the desktop shortcut.
+ A2  wesnoth.exe --access-selftest=selftest.txt in the WesnothAccess folder:
+     selftest.txt says "result: PASS" and names your screen reader as engine.
+ A3  The shortcut starts the game; you hear "Wesnoth Access ready".
+ A4  "Loading" is spoken once or twice, then "Main menu, Campaigns, button".
+ A5  The screen reader does not read other things over it (window title,
+     "unknown", "blank"). Note what it says, if anything.
+
+B. SPEECH BEHAVIOUR
+ B1  Pressing Control stops speech.
+ B2  Quickly pressing Tab several times: each press interrupts the previous
+     announcement (no backlog).
+ B3  F12 repeats the last message; Shift+F12 goes back in the history.
+ B4  Alt+Tab to another program and back: the current screen is announced.
+ B5  Shift+F2, "Speech engine": switching to SAPI5 and back to automatic
+     works; "Test speech" speaks.
+ B6  With the screen reader closed (start the game, then quit JAWS/NVDA):
+     the SAPI voice takes over within a few seconds.
+ B7  Typing in a text field: characters are echoed once (not twice).
+
+C. MENUS AND DIALOGS
+ C1  Main menu: Tab and Shift+Tab move through all buttons; F4 reads all.
+ C2  Preferences (Ctrl+P or the button): every page and control can be
+     reached with Tab; check boxes toggle with Space; sliders change with
+     Left/Right and the value is spoken; Escape closes.
+ C3  Language selection: the list is readable; Escape keeps the language.
+ C4  Shift+F2 accessibility settings: every value can be changed with Enter
+     and is kept after restarting the game.
+ C5  F2 command reference: Up/Down read the commands.
+ C6  Credits (from the main menu) can be closed with Escape.
+
+D. CAMPAIGN START (A Tale of Two Brothers)
+ D1  Campaigns: the tree is read, Up/Down select a campaign and read its
+     description; the Difficulty menu button can be changed with Up/Down.
+ D2  Enter starts the campaign; story pages are read; Enter goes to the next
+     page; Escape skips the story.
+ D3  Each character message is read with the speaker; Enter continues.
+ D4  The objectives dialog is read; Enter closes it.
+ D5  "Your turn" with the turn summary.
+ D6  F11, Shift+F11: dialogue history.
+
+E. MAP
+ E1  W E D S A Q move the cursor; the description makes sense; at the map
+     edge you hear "edge of map".
+ E2  Shift+direction jumps; Home, Shift+Home, Backspace, Ctrl+G (type "5 5").
+ E3  F3, F4, F5, Ctrl+F5 lists; Shift goes backwards.
+ E4  X, V, Shift+V, Z, C, Shift+C, F8, F9, Shift+F9, Ctrl+F9.
+ E5  An enemy hidden in fog or in ambush is never mentioned.
+ E6  Ctrl+1 then 1: bookmark.
+ E7  The game's own N cycles units and the selection is announced.
+
+F. ACTIONS
+ F1  Enter on your unit: "Selected ..."; F6 lists destinations; Enter on a
+     destination moves the unit and the arrival is announced.
+ F2  U undoes the move ("Undone"); U again with nothing left: "not available".
+ F3  F7 on a unit next to enemies (or that can reach them): Enter opens the
+     attack dialog; weapons and retaliation are read; Enter attacks; strikes
+     and the result are announced.
+ F4  Escape in the attack dialog cancels without attacking.
+ F5  Ctrl+R on the keep: recruit dialog; Up/Down read units and cost; Enter
+     recruits; the new unit is announced with the remaining gold.
+ F6  Alt+R recall (in a later scenario with veterans).
+ F7  A unit gaining a level: the advancement dialog lists the choices.
+ F8  Space ends the selected unit's turn; Ctrl+Space ends your turn.
+ F9  Enemy turn: moves and attacks you can see are announced; with fog,
+     moves out of sight are not described in detail.
+
+G. SAVE, LOAD, HELP, QUIT
+ G1  Ctrl+S: the save dialog proposes a name; Enter saves; "Saved".
+ G2  Ctrl+O: the load list is read; Enter loads; the turn is announced.
+ G3  F1 opens the help; topics, paragraphs and links work; Escape closes.
+ G4  Ctrl+Alt+D on a unit opens its help page.
+ G5  Escape with nothing selected opens the game menu; quit to the main
+     menu; Quit in the main menu exits the game.
+
+H. COMPLETE A SCENARIO
+ H1  Win the first scenario of A Tale of Two Brothers; the victory message
+     and the next scenario's story are read.
+ H2  The second scenario starts; recall is available.
+ H3  Load an autosave from the main menu (Load).
+
+Thank you. Please send the notes and the log file.

@@ -1,0 +1,61 @@
+WESNOTH ACCESS @ACCESS_VERSION@ - KNOWN LIMITATIONS
+
+Verification status
+- Not yet tested with real JAWS or NVDA. Speech output was tested
+  automatically through a text log (Linux and Windows) and through SAPI 5 on
+  a Windows test machine without a screen reader. Real screen reader
+  behaviour (interruption, keyboard echo, focus handling) needs the manual
+  checklist in TESTING-CHECKLIST.txt.
+- Tested automatically: main menu, settings, command reference, campaign
+  selection, story, character dialogue, objectives, save and load dialogs,
+  map review, unit and village lists, hidden-unit protection, select, move,
+  attack through the attack dialog, advancement dialog, recruit dialog,
+  undo feedback, end of turn, enemy turn, healing, the help. Other dialogs
+  (preferences, add-ons, multiplayer, statistics, unit list, status table,
+  hotkey settings, map editor dialogs) are handled by the generic dialog
+  layer but were not checked one by one.
+
+Screens and features with reduced support
+- Map editor: its dialogs are readable, but there is no review cursor for
+  editing maps.
+- Online multiplayer: lobby and game setup dialogs are readable through the
+  generic layer; chat messages are spoken. Not tested.
+- The attack dialog's "Damage Calculation" window shows probability graphs;
+  only its texts and numbers are read.
+- The minimap, unit portraits and story images are not described.
+- The whiteboard (planning mode) has no special support.
+- "Show enemy moves" (the game's highlight of where enemies can go) is not
+  spoken; use the enemy list (F4) and unit details (V) instead.
+- Turn timers of timed multiplayer games are not announced.
+- Accessibility messages are in English only (the game's own texts follow
+  the selected language).
+
+Behaviour to be aware of
+- In the map view the letters W, E, D, S, A and Q move the review cursor.
+  The game's own D (unit help) and S (statistics) are on Ctrl+Alt+D and
+  Ctrl+Alt+S; Ctrl+G (grid) is "jump to coordinates".
+- Right after an attack or advancement animation, game commands are blocked
+  for a moment by the game; you then hear "not available now".
+- In story screens, the first Enter on a page that is still appearing only
+  shows it completely; the next Enter goes to the next page.
+- Recruiting places the unit on the hex under the review cursor if it is a
+  free castle hex, otherwise on a castle hex chosen by the game.
+- Character dialogue and story texts are spoken when they appear and stay
+  in the dialogue history (F11). Very long texts can be read sentence by
+  sentence with Tab and Up/Down.
+- Typed characters in text fields are echoed by the screen reader itself
+  (its "speak typed characters" setting).
+
+Packaging
+- The overlay package needs an existing Battle for Wesnoth 1.18.8
+  installation; other versions are refused or warned about.
+- Release packages on the GitHub Releases page have not been published yet;
+  builds are available as GitHub Actions artifacts.
+
+Next steps (development)
+1. Fix problems found by the JAWS/NVDA checklist.
+2. Check the remaining dialogs one by one (preferences, add-ons, statistics,
+   unit list, status table, load game filters).
+3. Optional: spoken path preview while moving the cursor with a unit
+   selected; spoken enemy reach.
+4. Translations of the accessibility texts.

@@ -1,0 +1,194 @@
+WESNOTH ACCESS @ACCESS_VERSION@ - USER MANUAL
+Battle for Wesnoth @GAME_VERSION@ for screen reader users
+
+Wesnoth Access makes The Battle for Wesnoth playable with a keyboard and a
+screen reader (JAWS or NVDA) without sight. It is built into the game
+itself. It does not change the rules: every move, attack and recruitment is
+done by the game's own code and dialogs, and you only hear what a sighted
+player could see on the screen.
+
+Installation: see INSTALL.txt. All keys: see KEYS.txt, or press F2 in the game.
+
+
+1. FIRST START
+
+Start the game with the "Wesnoth Access" shortcut. You hear "Wesnoth Access
+ready. Press F2 for help." Loading takes a while the first time. Then the
+main menu is announced with the focused button, normally "Campaigns".
+
+Speech goes to the screen reader that is running (JAWS or NVDA). If none is
+running, the Windows SAPI voice is used. Press Control to stop speech.
+
+The game runs in full screen. If you prefer a window, add --windowed to the
+shortcut or use Preferences, Display. With Alt+Tab you can leave and return;
+when the game window gets the focus back, the current screen is announced.
+
+
+2. MENUS AND DIALOGS
+
+All of the game's menus and dialogs work the same way:
+- Tab and Shift+Tab move between the controls: buttons, check boxes, lists,
+  tree views, menu buttons, sliders, text fields and long texts.
+- Each control is announced with its name, its type and its state, for
+  example "Music, check box, checked" or "Difficulty, menu button, Normal,
+  2 of 4".
+- Up and Down move inside lists, trees and menu buttons. The new item is
+  read. If the dialog shows a description of the selected item (for
+  example the campaign description), it is read after the item.
+- Left and Right change sliders and open or close tree branches.
+- Enter or Space presses a button; Space toggles a check box. In a list,
+  Enter normally confirms the dialog (the OK button).
+- Escape closes the dialog.
+- F4 reads the whole dialog including every item of every list.
+  Shift+F4 describes the focused control in detail.
+- On long texts (Tab to them), Up and Down read sentence by sentence.
+
+Main menu: Campaigns, Multiplayer, Load, Add-ons, Map Editor, Preferences,
+Achievements, Community, Credits, Quit, and Help. The tip of the day is
+read with F4. The game's own shortcuts also work: C campaigns,
+M multiplayer, A add-ons, Ctrl+O load, Ctrl+P preferences, Ctrl+Q quit.
+
+
+3. STARTING A CAMPAIGN
+
+1. In the main menu press Enter on Campaigns.
+2. The campaign list is a tree view. Up and Down select a campaign; its
+   description is read. Tab reaches the Difficulty menu button (Up and Down
+   change it) and the other options.
+3. Enter starts the campaign.
+4. The story is read page by page. Enter (on the Next button) goes to the
+   next page; while a page is still appearing, the first Enter only shows
+   it completely. Escape skips the rest of the story.
+5. Characters' messages are read with the speaker's name. Enter continues.
+   When a message offers choices, they are a list: Up and Down, then Enter.
+6. The scenario objectives are shown in a dialog at the start; it is read.
+   Enter closes it.
+7. "Your turn" is announced with a summary: turn, gold, income, upkeep,
+   villages, time of day and your units.
+
+F11 repeats the last dialogue line or story page at any time; Shift+F11
+goes back through the earlier ones.
+
+
+4. THE MAP
+
+The map is made of hexagons. Every hex has six neighbours: north (W),
+north-east (E), south-east (D), south (S), south-west (A) and north-west (Q).
+Coordinates are column and row, counted from 1 at the top left, exactly as
+the game shows them.
+
+The review cursor is your eyes on the map. Moving it never changes the
+game. When it moves, the hex is described: a unit on it (yours, allied or
+enemy, with hit points and remaining moves), the terrain, a village and its
+owner, labels, items, and, when one of your units is selected, the defense
+and movement cost for that unit and whether it can reach the hex this turn.
+Hexes you have not explored are "unexplored"; under fog of war you hear the
+terrain but no units.
+
+Shift with a direction key jumps until the terrain changes or a unit,
+village or label is reached. Home goes to the selected unit, Shift+Home to
+your leader, Backspace back to the previous location, Ctrl+G to typed
+coordinates, 1 to 9 to bookmarks (set with Ctrl+1 to Ctrl+9).
+
+Useful information keys: X (full tile), V and Shift+V (unit details,
+including weapons with the current damage, resistances and advancement),
+Z (the six neighbours), C (coordinates and distances), F8 (objectives),
+F9 (gold and turn), Shift+F9 (time of day), Ctrl+F9 (unit counts).
+
+Lists move the cursor to each item in turn: F3 your units, Ctrl+F3 units
+that can still act, Alt+F3 wounded units, F4 visible enemies, Ctrl+F4
+allies, F5 villages, Ctrl+F5 labelled places. Shift with the same key goes
+backwards.
+
+
+5. YOUR TURN: SELECT, MOVE, ATTACK
+
+Select a unit: put the cursor on it (for example with F3 or the game's own
+N key) and press Enter. You hear "Selected", the unit, how many hexes it can
+reach and how many enemies it can attack.
+
+Move: F6 lists the hexes the unit can reach this turn with the moves left
+after arriving. Put the cursor on the destination and press Enter. You hear
+where the unit arrived. If an ambush or newly sighted enemies stop the move,
+that is announced; T continues the move. Shift+X before moving describes the
+route. U undoes a move, R redoes it.
+
+Attack: F7 lists every enemy the selected unit can attack, once for every
+free hex it can attack from, with the defense of that hex. Press Enter: the
+game's attack dialog opens. It lists your weapons, each with the enemy's
+retaliation, damage, strikes and chance to hit, as the game calculates them.
+Up and Down choose the weapon; Tab reaches "Damage Calculation" for the
+detailed probabilities; Enter attacks; Escape cancels. During the fight
+every strike is announced (hit or miss, damage, hit points left, poisoned,
+slowed, killed), then the experience gained.
+
+Advancement: when a unit can advance to more than one type, the game's
+dialog opens with the choices as a list; F4 reads them all.
+
+Recruit: put the cursor on your leader's keep (Shift+Home) and press
+Ctrl+R. The recruit dialog lists the units with their cost; the details of
+the selected unit are read with F4. Enter recruits onto a free castle hex.
+Recall works the same with Alt+R.
+
+End your turn with Ctrl+Space. Space alone ends the selected unit's turn.
+If a command is not possible at the moment (for example recruiting away
+from a keep, or undo with nothing to undo), you hear "not available now".
+
+
+6. ENEMY AND ALLIED TURNS
+
+"Enemy turn" or "Allied turn" is announced with the side. Moves and attacks
+you can see are announced as they happen; actions hidden by fog of war or by
+invisible units are not. In the settings you can choose a summary at the
+end of the turn instead, or silence. Healing and poison damage at the start
+of a turn are announced.
+
+
+7. SAVING, LOADING, QUITTING
+
+Ctrl+S saves (the save dialog proposes a name; Enter saves). Ctrl+O loads
+(the list of saved games, newest first; Enter loads). In the main menu,
+Load does the same. Escape on the map with nothing selected opens the
+game's menu; Ctrl+Q quits to the desktop after a confirmation.
+
+
+8. THE GAME'S HELP
+
+F1, the Help button of the main menu and Ctrl+Alt+D (help for the unit
+under the cursor) open the game's help. It is read by Wesnoth Access:
+- In the list of topics, Up and Down move, Enter or Right opens a section
+  or a topic, Left closes a section, a letter jumps to the next entry
+  starting with it.
+- In a topic, Up and Down read paragraph by paragraph, Tab and Shift+Tab
+  select cross-references, Enter follows the selected reference (or reads
+  the whole topic when none is selected), Backspace goes back, Left
+  returns to the topic list.
+- Escape closes the help.
+
+
+9. SETTINGS
+
+Shift+F2 opens the accessibility settings. Each line shows the current
+value; Enter changes it:
+- Speech engine: automatic (recommended), or a fixed screen reader or SAPI.
+- Use SAPI when no screen reader is running.
+- Navigation interrupts speech.
+- Verbosity: brief, normal or detailed.
+- Combat announcements: every strike or the outcome only.
+- Enemy turn announcements: every visible action, a summary, or silent.
+- Terrain information: name only, with defense and movement cost for the
+  selected unit, or full detail.
+- Announce coordinates.
+- Turn summary at the start of each turn.
+- Audio cues: short sounds for the map edge, selection, errors and new turns.
+- Debug logging (more detail in the accessibility log).
+- Test speech, and Turn accessibility off.
+Ctrl+Alt+A turns the accessibility layer off and on at any time.
+
+
+10. PROBLEMS
+
+The accessibility log is in Documents\My Games\Wesnoth1.18\logs\
+wesnoth-access.log. It records the version, the speech engine found, the
+dialogs opened and errors. Please attach it to problem reports. It never
+contains passwords.

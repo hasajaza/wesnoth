@@ -127,7 +127,25 @@ as Ctrl+Alt+S. Ctrl+G (show grid, a visual setting) is used for "jump to
 coordinates". All other game keys keep working.
 
 
-4. CHANGING KEYS
+4. THE GAME'S HELP (F1, Help button, Ctrl+Alt+D)
+
+Topic list
+Up, Down           Previous / next entry
+Home, End          First / last entry
+Enter or Right     Open a section or a topic
+Left               Close a section, or go to its parent section
+A to Z             Next entry starting with that letter
+Reading a topic
+Up, Down           Previous / next paragraph
+Home, End          First / last paragraph
+Tab, Shift+Tab     Next / previous cross-reference (link)
+Enter              Follow the selected link; without a selected link, read the whole topic
+Backspace          Back to the previous topic (after following a link) or to the list
+Left               Back to the topic list
+Escape             Close the help
+
+
+5. CHANGING KEYS
 
 Key bindings are stored in the Wesnoth preferences file (preferences, in
 your Wesnoth user data folder) as the value access_key_bindings, a list of

@@ -1,0 +1,101 @@
+WESNOTH ACCESS @ACCESS_VERSION@ - ARCHITECTURE
+
+PRINCIPLES
+
+1. Alternative input and output only. Game rules, RNG use, AI and
+   visibility are never changed. Actions are performed by calling the
+   engine's own entry points that a mouse click would call. Information is
+   read after the engine computed it and filtered by the viewing team's
+   fog, shroud and unit invisibility.
+2. Native and generic. The layer is C++ inside the engine. Dialogs are
+   handled generically by walking GUI2 widget trees, so dialogs built from
+   WML or Lua at runtime are covered too.
+3. No game data changes. Everything is in the executable, so the compact
+   package can run against an unmodified 1.18.8 installation (--data-dir).
+4. Never block the game. All speech library calls run on a worker thread.
+
+
+MODULES (src/accessibility/)
+
+speech.*        Speech worker thread and backends. Windows: Universal Speech
+                (UniversalSpeech.dll loaded with LoadLibrary at runtime, COM
+                initialised on the worker thread; JAWS through its COM API,
+                NVDA through nvdaControllerClient.dll, SAPI 5 fallback;
+                Narrator is detected and replaced by SAPI because its driver
+                cannot speak). Other backends: log (tests), stdout, none,
+                spd-say (Linux). Interrupting requests drop queued ones.
+accessibility.* Settings (preferences keys access_*), the manager created in
+                do_gameloop(), speak() with message classes (nav, reply,
+                event, important), duplicate suppression, speech and
+                dialogue histories, global keys, audio cues (UI sounds), the
+                accessibility log, the speech self test, the settings dialog
+                and the command reference (both reuse the existing
+                simple_item_selector GUI2 dialog).
+keymap.*        Command table with ids, contexts (global, dialog, map),
+                default keys and descriptions; user overrides from the
+                preference access_key_bindings.
+gui_access.*    Generic GUI2 layer. Hooks: sdl_event_handler::key_down
+                (before and after native dispatch), window::show (opened,
+                tick, closed), focus regained. It collects focusable
+                controls (buttons, toggles, lists, trees, menus, sliders,
+                text fields, long texts) and texts in reading order,
+                respecting visibility, stacked widgets and multi pages. The
+                native keyboard focus follows the accessibility focus.
+                Activation fires the native LEFT_BUTTON_CLICK signal. A
+                state snapshot before each key is compared afterwards to
+                announce changes; a 300 ms poll catches timed changes
+                (story pages). Window pointers are never dereferenced after
+                they leave the stack of open windows.
+help_access.*   Keyboard reader for the legacy (non-GUI2) help browser,
+                over the help data structures (sections, topics, parsed
+                topic text with [ref]/[header]/... items).
+game_access.*   Map layer. The review cursor drives the native hovered hex
+                (mouse_handler::access_hover, i.e. mouse_motion with an
+                explicit hex), so route preview, attack direction, sidebar
+                reports and native commands that act on the hovered hex all
+                follow it. Enter calls mouse_handler::select_or_action, the
+                same code as a click. Attack positions chosen with F7 are
+                applied by hovering the attack hex first, which the native
+                attack-direction logic uses. Unit details come from the
+                native sidebar report generators (reports::generate_report)
+                with a reports::context built from the play controller.
+                Event hooks (moves, strikes, recruits, advancements,
+                healing, undo, announcements, chat, turns) only read data.
+test_driver.*   --access-test-script: injects SDL key and text events from
+                a script and checks the spoken text, waits for dialogs,
+                checks that the scenario RNG and replay are unchanged.
+
+ENGINE CHANGES (all marked "Wesnoth Access")
+
+wesnoth.cpp                     manager lifetime, --access-selftest
+commandline_options.*           new options
+controller_base.cpp             map key hook, focus regained
+gui/core/event/handler.cpp      dialog key hook, focus regained
+gui/widgets/window.cpp          dialog open/tick/close
+gui/widgets/text_box_base.hpp   public read-only cursor accessors
+mouse_events.*                  access_hover(), selection hook
+display.*                       announce hook, read-only overlay accessor
+display_chat_manager.cpp        chat hook
+play_controller.cpp             controller start/end
+playsingle_controller.cpp       human turn start, AI turn start/end, linger
+actions/attack.cpp              fight start, each strike, fight end
+actions/move.cpp                move end
+actions/create.cpp              recruit/recall
+actions/advancement.cpp         advancement
+actions/heal.cpp                healing/poison
+actions/undo.cpp                undo/redo feedback
+hotkey/command_executor.cpp     "not available now" for disabled commands
+help/help.cpp                   help reader in the help loop
+
+BUILD AND PACKAGING
+
+.github/workflows/wesnoth-access.yml
+  windows-build: cross-compiles with the upstream MinGW image (the toolchain
+  of the official Windows releases, pinned by digest), builds Universal
+  Speech from a pinned commit, downloads the x64 NVDA controller client,
+  packages with packaging/access/make_package.py (collects and verifies all
+  DLL imports, adds libssp-0.dll, scripts, docs, licences).
+  windows-smoke-test: on windows-latest: --version, speech self test,
+  installer, all end-to-end scripts on the Windows binary.
+  linux-tests: unit tests, end-to-end scripts, the complete upstream WML
+  unit test suite with the layer disabled and enabled.
