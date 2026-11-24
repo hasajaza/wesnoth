@@ -20,6 +20,8 @@
 
 #include "display.hpp"
 
+#include "accessibility/game_access.hpp"
+
 #include "arrow.hpp"
 #include "color.hpp"
 #include "cursor.hpp"
@@ -1641,6 +1643,9 @@ const theme::menu* display::menu_pressed()
 
 void display::announce(const std::string& message, const color_t& color, const announce_options& options)
 {
+	// Wesnoth Access: speak floating announcements (ambush, units sighted, ...).
+	accessibility::game::on_announce(message);
+
 	if(options.discard_previous) {
 		font::remove_floating_label(prevLabel);
 	}

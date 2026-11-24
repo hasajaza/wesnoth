@@ -15,6 +15,8 @@
 
 #include "display_chat_manager.hpp"
 
+#include "accessibility/game_access.hpp"
+
 #include "desktop/notifications.hpp"
 #include "display.hpp"
 #include "floating_label.hpp"
@@ -50,6 +52,9 @@ void display_chat_manager::add_chat_message(const std::time_t& time, const std::
 		int side, const std::string& message, events::chat_handler::MESSAGE_TYPE type,
 		bool bell)
 {
+	// Wesnoth Access: speak chat and scripted messages.
+	accessibility::game::on_chat(speaker, message);
+
 	const bool whisper = speaker.find("whisper: ") == 0;
 	std::string sender = speaker;
 	if (whisper) {

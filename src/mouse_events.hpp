@@ -90,6 +90,16 @@ public:
 	void select_or_action(bool browse);
 
 	/**
+	 * Wesnoth Access: makes @a hex the hovered hex exactly as if the mouse
+	 * pointer had moved onto it (route preview, attack direction, sidebar).
+	 * Used by the keyboard review cursor; does not change the game state.
+	 */
+	void access_hover(const map_location& hex, bool browse)
+	{
+		mouse_motion(0, 0, browse, true, hex);
+	}
+
+	/**
 	 * Uses SDL and @ref game_display::hex_clicked_on
 	 * to fetch the hex the mouse is hovering, if applicable.
 	 */

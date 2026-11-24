@@ -16,6 +16,8 @@
 
 #include "mouse_events.hpp"
 
+#include "accessibility/game_access.hpp"
+
 #include "actions/attack.hpp"                // for battle_context, etc
 #include "actions/move.hpp"                  // for move_and_record
 #include "actions/undo.hpp"                  // for undo_list
@@ -1099,6 +1101,8 @@ void mouse_handler::select_hex(const map_location& hex, const bool browse, const
 			}
 		}
 
+		// Wesnoth Access: announce the selection (read-only).
+		accessibility::game::on_select(hex);
 		return;
 	}
 
@@ -1138,6 +1142,9 @@ void mouse_handler::select_hex(const map_location& hex, const bool browse, const
 
 		pc_.get_whiteboard()->on_deselect_hex();
 	}
+
+	// Wesnoth Access: forget the announced selection (read-only).
+	accessibility::game::on_select(map_location::null_location());
 }
 
 void mouse_handler::deselect_hex()

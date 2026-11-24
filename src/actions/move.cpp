@@ -20,6 +20,8 @@
 
 #include "actions/move.hpp"
 
+#include "accessibility/game_access.hpp"
+
 #include "actions/undo.hpp"
 #include "actions/vision.hpp"
 
@@ -1081,6 +1083,11 @@ namespace { // Private helpers for move_unit()
 
 		// Update the screen.
 		display::get_singleton()->redraw_minimap();
+
+		// Wesnoth Access: announce the completed move (read-only).
+		accessibility::game::on_move(move_it_.valid() ? &*move_it_ : nullptr, *begin_, final_loc, current_side_,
+			resources::gameboard->map().is_village(final_loc) && orig_village_owner != current_side_
+				&& move_it_.valid() && resources::gameboard->village_owner(final_loc) == current_side_);
 	}
 
 

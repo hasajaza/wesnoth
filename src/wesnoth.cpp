@@ -28,6 +28,7 @@
 #include "game_config_manager.hpp" // for game_config_manager, etc
 #include "game_end_exceptions.hpp"
 #include "game_launcher.hpp" // for game_launcher, etc
+#include "accessibility/accessibility.hpp"
 #include "gettext.hpp"
 #include "gui/core/event/handler.hpp" // for tmanager
 #include "gui/dialogs/end_credits.hpp"
@@ -755,8 +756,16 @@ static int do_gameloop(const std::vector<std::string>& args)
 		return finished;
 	}
 
+	// Wesnoth Access: speech self test (no game data or window needed).
+	if(cmdline_opts.access_selftest) {
+		return accessibility::run_selftest(*cmdline_opts.access_selftest, cmdline_opts);
+	}
+
 	const auto game = std::make_unique<game_launcher>(cmdline_opts);
 	const int start_ticks = SDL_GetTicks();
+
+	// Wesnoth Access: preferences are loaded now; start the accessibility layer.
+	const accessibility::manager access_manager(cmdline_opts);
 
 	init_locale();
 

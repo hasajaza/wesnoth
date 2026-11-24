@@ -53,6 +53,16 @@ public:
 	/** True if the --validate or any of the --validate-*  options are given. */
 	bool any_validation_option() const;
 
+	/** Wesnoth Access: true if --accessibility was given. Enables the accessibility layer (screen reader output). */
+	bool accessibility = false;
+	/** Wesnoth Access: true if --no-accessibility was given. Disables the accessibility layer for this session. */
+	bool no_accessibility = false;
+	/** Wesnoth Access: speech backend override given with --access-speech (auto, log, stdout, none). */
+	std::optional<std::string> access_speech;
+	/** Wesnoth Access: output file of the "log" speech backend, given with --access-speech-log. */
+	std::optional<std::string> access_speech_log;
+	/** Wesnoth Access: non-empty if --access-selftest was given. Tests speech output, writes a report to <arg> and exits. */
+	std::optional<std::string> access_selftest;
 	/** Non-empty if --bunzip2 was given on the command line. Uncompresses a .bz2 file and exits. */
 	std::optional<std::string> bunzip2;
 	/** Non-empty if --bzip2 was given on the command line. Compresses a file to .bz2 and exits. */

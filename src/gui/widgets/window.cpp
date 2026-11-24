@@ -22,6 +22,8 @@
 
 #include "gui/widgets/window_private.hpp"
 
+#include "accessibility/gui_access.hpp"
+
 #include "config.hpp"
 #include "cursor.hpp"
 #include "draw.hpp"
@@ -553,6 +555,14 @@ int window::show(const unsigned auto_close_timeout)
 	// Make sure we display at least once in all cases.
 	events::draw();
 
+	// Wesnoth Access: announce the dialog and track it until it closes.
+	struct access_guard
+	{
+		window& w;
+		explicit access_guard(window& win) : w(win) { accessibility::gui::window_opened(w); }
+		~access_guard() { accessibility::gui::window_closed(w); }
+	} access_scope(*this);
+
 	if(auto_close_timeout) {
 		SDL_Event event;
 		sdl::UserEvent data(CLOSE_WINDOW_EVENT, manager::instance().get_id(*this));
@@ -576,6 +586,9 @@ int window::show(const unsigned auto_close_timeout)
 		for(status_ = status::SHOWING; status_ != status::CLOSED;) {
 			// Process and handle all pending events.
 			events::pump();
+
+			// Wesnoth Access: detect text that changed without a key press.
+			accessibility::gui::window_tick(*this);
 
 			if(!mouse_button_state_initialized) {
 				/*

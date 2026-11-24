@@ -605,6 +605,12 @@ public:
 	map_labels& labels();
 	const map_labels& labels() const;
 
+	/** Wesnoth Access: read-only view of the item overlays ([item]) on the map. */
+	const std::map<map_location, std::vector<overlay>>& access_overlays()
+	{
+		return get_overlays();
+	}
+
 	/** Holds options for calls to function 'announce' (@ref announce). */
 	struct announce_options
 	{

@@ -19,6 +19,8 @@
 
 #include "actions/advancement.hpp"
 
+#include "accessibility/game_access.hpp"
+
 #include "actions/vision.hpp"
 
 #include "ai/manager.hpp"  // for manager, holder
@@ -397,6 +399,11 @@ void advance_unit(map_location loc, const advancement_option &advance_to, bool f
 	// Update fog/shroud.
 	actions::shroud_clearer clearer;
 	clearer.clear_unit(loc, *new_unit);
+
+	// Wesnoth Access: announce the advancement.
+	if(u.valid()) {
+		accessibility::game::on_advance(*u);
+	}
 
 	// "post_advance" event.
 	if(fire_event)

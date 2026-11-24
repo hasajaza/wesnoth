@@ -20,6 +20,8 @@
 
 #include "actions/create.hpp"
 
+#include "accessibility/game_access.hpp"
+
 #include "actions/move.hpp"
 #include "actions/undo.hpp"
 #include "actions/vision.hpp"
@@ -683,6 +685,9 @@ place_recruit_result place_recruit(unit_ptr u, const map_location &recruit_locat
 		display::get_singleton()->invalidate(current_loc);
 		display::get_singleton()->redraw_minimap();
 	}
+
+	// Wesnoth Access: announce the new unit if the viewing side can see it.
+	accessibility::game::on_unit_placed(*new_unit_itor, is_recall);
 
 	// Village capturing.
 	if ( resources::gameboard->map().is_village(current_loc) ) {

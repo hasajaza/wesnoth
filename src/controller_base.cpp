@@ -16,6 +16,8 @@
 
 #include "controller_base.hpp"
 
+#include "accessibility/game_access.hpp"
+
 #include "display.hpp"
 #include "events.hpp"
 #include "game_config_manager.hpp"
@@ -100,6 +102,16 @@ void controller_base::handle_event(const SDL_Event& event)
 {
 	if(gui::in_dialog()) {
 		return;
+	}
+
+	// Wesnoth Access: keyboard review cursor and information commands. Only
+	// key events are inspected, and only when no text field has the focus.
+	if((event.type == SDL_KEYDOWN || event.type == SDL_TEXTINPUT) && have_keyboard_focus()
+		&& accessibility::game::handle_event(*this, event)) {
+		return;
+	}
+	if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
+		accessibility::game::on_focus_gained(*this);
 	}
 
 	events::mouse_handler_base& mh_base = get_mouse_handler_base();

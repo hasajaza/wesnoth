@@ -17,6 +17,8 @@
 
 #include "gui/core/event/handler.hpp"
 
+#include "accessibility/gui_access.hpp"
+
 #include "draw_manager.hpp"
 #include "events.hpp"
 #include "gui/core/event/dispatcher.hpp"
@@ -449,8 +451,11 @@ void sdl_event_handler::handle_event(const SDL_Event& event)
 					break;
 
 				case SDL_WINDOWEVENT_ENTER:
+					activate();
+					break;
 				case SDL_WINDOWEVENT_FOCUS_GAINED:
 					activate();
+					accessibility::gui::focus_regained();
 					break;
 			}
 
@@ -756,6 +761,18 @@ void sdl_event_handler::button_down(const SDL_Event& event)
 
 void sdl_event_handler::key_down(const SDL_Event& event)
 {
+	// Wesnoth Access: give the accessibility layer the first look at the key
+	// (focus navigation, activation, reading), then report what changed.
+	window* access_window = nullptr;
+	if(dispatcher* d = keyboard_dispatcher()) {
+		if(widget* w = dynamic_cast<widget*>(d)) {
+			access_window = w->get_window();
+		}
+	}
+	if(access_window && accessibility::gui::key_before(*access_window, event)) {
+		return;
+	}
+
 	const hotkey::hotkey_ptr hk = hotkey::get_hotkey(event);
 	bool done = false;
 	if(!hk->null()) {
@@ -767,6 +784,10 @@ void sdl_event_handler::key_down(const SDL_Event& event)
 		} else {
 			key_down(event.key.keysym.sym, static_cast<SDL_Keymod>(event.key.keysym.mod), "");
 		}
+	}
+
+	if(access_window) {
+		accessibility::gui::key_after(*access_window, event);
 	}
 }
 

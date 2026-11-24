@@ -21,6 +21,8 @@
 
 #include "playsingle_controller.hpp"
 
+#include "accessibility/game_access.hpp"
+
 #include "actions/undo.hpp"
 #include "ai/manager.hpp"
 #include "ai/testing.hpp"
@@ -568,6 +570,9 @@ void playsingle_controller::play_human_turn()
 
 	end_turn_enable(true);
 
+	// Wesnoth Access: turn summary.
+	accessibility::game::on_human_turn_start(*this);
+
 	while(!should_return_to_play_side() && !end_turn_requested_) {
 		check_objectives();
 		play_slice_catch();
@@ -599,6 +604,9 @@ void playsingle_controller::linger()
 	gamestate().board_.set_all_units_user_end_turn();
 
 	update_gui_linger();
+
+	// Wesnoth Access: tell the player the scenario can still be reviewed.
+	accessibility::game::on_linger(*this);
 
 	try {
 		if(replay_controller_.get() != nullptr) {
@@ -655,6 +663,15 @@ void playsingle_controller::play_ai_turn()
 
 	undo_stack().clear();
 	turn_data_.send_data();
+
+	// Wesnoth Access: announce the turn and summarise visible actions at its end.
+	struct access_turn_guard
+	{
+		playsingle_controller& c;
+		int side;
+		access_turn_guard(playsingle_controller& pc, int s) : c(pc), side(s) { accessibility::game::on_other_turn_start(c, side); }
+		~access_turn_guard() { accessibility::game::on_other_turn_end(c, side); }
+	} access_turn(*this, current_side());
 
 	try {
 		try {

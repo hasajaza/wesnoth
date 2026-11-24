@@ -21,6 +21,8 @@
 
 #include "play_controller.hpp"
 
+#include "accessibility/game_access.hpp"
+
 #include "actions/advancement.hpp"
 #include "actions/create.hpp"
 #include "actions/heal.hpp"
@@ -196,10 +198,14 @@ play_controller::play_controller(const config& level, saved_game& state_of_game,
 		clear_resources();
 		throw;
 	}
+
+	// Wesnoth Access: the map is ready for the review cursor.
+	accessibility::game::on_controller_start(*this);
 }
 
 play_controller::~play_controller()
 {
+	accessibility::game::on_controller_end(*this);
 	unit_types.remove_scenario_fixes();
 	clear_resources();
 }

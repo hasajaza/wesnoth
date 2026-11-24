@@ -20,6 +20,8 @@
 
 #include "actions/attack.hpp"
 
+#include "accessibility/game_access.hpp"
+
 #include "actions/advancement.hpp"
 #include "actions/vision.hpp"
 
@@ -1078,8 +1080,18 @@ bool attack::perform_hit(bool attacker_turn, statistics_attack_context& stats)
 		);
 	}
 
+	// Wesnoth Access: remember the visible effects before they are applied (read-only).
+	const bool access_poisons = hits && attacker_stats->poisons && !defender.get_unit().get_state(unit::STATE_POISONED);
+	const bool access_slows = hits && attacker_stats->slows && !defender.get_unit().get_state(unit::STATE_SLOWED);
+	const bool access_petrifies = hits && attacker_stats->petrifies;
+
 	bool dies = defender.get_unit().take_hit(damage);
 	LOG_NG << "defender took " << damage << (dies ? " and died\n" : "\n");
+
+	// Wesnoth Access: announce the actual result of this strike.
+	accessibility::game::on_strike(attacker.get_unit(), defender.get_unit(),
+		attacker_stats->weapon ? attacker_stats->weapon->name().str() : std::string(),
+		hits, damage_done < damage ? damage_done : damage, dies, access_poisons, access_slows, access_petrifies, drains_damage);
 
 	if(attacker_turn) {
 		stats.attack_result(hits
@@ -1409,6 +1421,9 @@ void attack::perform()
 		   << d_stats_->num_blows << "(" << d_stats_->chance_to_hit << "%)"
 		   << (defender_strikes_first ? " defender first-strike" : "");
 
+	// Wesnoth Access: announce the fight (values computed by the engine above).
+	accessibility::game::on_attack_start(a_.get_unit(), d_.get_unit(), *a_stats_, *d_stats_);
+
 	// Play the pre-fight animation
 	unit_display::unit_draw_weapon(a_.loc_, a_.get_unit(), a_stats_->weapon, d_stats_->weapon, d_.loc_, d_.get_unit_ptr());
 
@@ -1476,6 +1491,10 @@ void attack::perform()
 
 	unit_display::unit_sheath_weapon(a_.loc_, a_.get_unit_ptr(), a_stats_->weapon, d_stats_->weapon,
 			d_.loc_, d_.get_unit_ptr());
+
+	// Wesnoth Access: summary of the fight and experience gained.
+	accessibility::game::on_attack_end(a_.valid() ? &a_.get_unit() : nullptr, d_.valid() ? &d_.get_unit() : nullptr,
+		a_.valid() ? a_.xp_ : 0, d_.valid() ? d_.xp_ : 0);
 
 	if(update_display_) {
 		game_display::get_singleton()->invalidate_unit();

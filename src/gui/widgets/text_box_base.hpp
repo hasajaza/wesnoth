@@ -159,6 +159,18 @@ public:
 	 */
 	void set_selection(std::size_t start, int length);
 
+	/** Wesnoth Access: cursor position (selection start), in characters. */
+	std::size_t access_selection_start() const
+	{
+		return get_selection_start();
+	}
+
+	/** Wesnoth Access: selection length, in characters. */
+	std::size_t access_selection_length() const
+	{
+		return get_selection_length();
+	}
+
 	void set_editable(bool editable)
 	{
 		editable_ = editable;

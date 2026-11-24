@@ -224,6 +224,15 @@ commandline_options::commandline_options(const std::vector<std::string>& args)
 		("with-replay", "replays the file loaded with the --load option.")
 		;
 
+	po::options_description access_opts("Accessibility options (Wesnoth Access)");
+	access_opts.add_options()
+		("accessibility", "enables the accessibility layer: speech output through the screen reader (JAWS, NVDA) or SAPI, keyboard navigation of all dialogs and of the game map. The setting is remembered.")
+		("no-accessibility", "disables the accessibility layer for this session.")
+		("access-speech", po::value<std::string>(), "selects the speech backend: auto (default), log, stdout or none.")
+		("access-speech-log", po::value<std::string>(), "file written by the 'log' speech backend.")
+		("access-selftest", po::value<std::string>(), "initializes speech output, speaks a test message, writes a report to <arg> and exits.")
+		;
+
 	po::options_description campaign_opts("Campaign options");
 	campaign_opts.add_options()
 		("campaign,c", po::value<std::string>()->implicit_value(std::string()), "goes directly to the campaign with id <arg>. A selection menu will appear if no id was specified.")
@@ -304,7 +313,7 @@ commandline_options::commandline_options(const std::vector<std::string>& args)
 	//hidden_.add_options()
 	//	("example-hidden-option", "")
 	//	;
-	visible_.add(general_opts).add(campaign_opts).add(display_opts).add(logging_opts).add(multiplayer_opts).add(testing_opts).add(parsing_opts);
+	visible_.add(general_opts).add(access_opts).add(campaign_opts).add(display_opts).add(logging_opts).add(multiplayer_opts).add(testing_opts).add(parsing_opts);
 
 	all_.add(visible_).add(hidden_);
 
@@ -326,6 +335,16 @@ commandline_options::commandline_options(const std::vector<std::string>& args)
 		multiplayer_ai_config = parse_to_uint_string_tuples_(vm["ai-config"].as<std::vector<std::string>>());
 	if(vm.count("algorithm"))
 		multiplayer_algorithm = parse_to_uint_string_tuples_(vm["algorithm"].as<std::vector<std::string>>());
+	if(vm.count("accessibility"))
+		accessibility = true;
+	if(vm.count("no-accessibility"))
+		no_accessibility = true;
+	if(vm.count("access-speech"))
+		access_speech = vm["access-speech"].as<std::string>();
+	if(vm.count("access-speech-log"))
+		access_speech_log = vm["access-speech-log"].as<std::string>();
+	if(vm.count("access-selftest"))
+		access_selftest = vm["access-selftest"].as<std::string>();
 	if(vm.count("bunzip2"))
 		bunzip2 = vm["bunzip2"].as<std::string>();
 	if(vm.count("bzip2"))
