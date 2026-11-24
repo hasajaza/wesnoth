@@ -22,6 +22,9 @@
 
 #include "help/help.hpp"
 
+#include "accessibility/accessibility.hpp"
+#include "accessibility/help_access.hpp"
+
 #include "config.hpp"                   // for config, etc
 #include "events.hpp"                   // for draw, pump, etc
 #include "font/constants.hpp"           // for relative_size
@@ -216,11 +219,20 @@ void show_with_toplevel(const section& toplevel_sec,
 		}
 		hb.queue_redraw();
 		events::draw();
+
+		// Wesnoth Access: keyboard reader for the help (the legacy topic menu
+		// only reacts while the mouse pointer is over it).
+		std::unique_ptr<accessibility::help_reader> access_reader;
+		if(accessibility::enabled()) {
+			access_reader = std::make_unique<accessibility::help_reader>(toplevel_sec, hb,
+				show_topic.empty() ? default_show_topic : show_topic);
+		}
+
 		CKey key;
 		for (;;) {
 			events::pump();
 			events::raise_process_event();
-			if (key[SDLK_ESCAPE]) {
+			if (key[SDLK_ESCAPE] || (access_reader && access_reader->closed())) {
 				// Escape quits from the dialog.
 				return;
 			}

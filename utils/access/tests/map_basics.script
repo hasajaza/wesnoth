@@ -163,9 +163,44 @@ expect Wesnoth Access Commands
 key Escape
 wait 500
 
+# The game's help (legacy browser) through the keyboard reader: the help page
+# of the unit under the cursor.
+mark
+key F4
+expect Orcish Grunt
+mark
+key Ctrl+Alt+D
+wait-for 20000 Help. Up and Down
+expect Orcish Grunt
+mark
+key Down
+key Down
+expect Race
+mark
+key Tab
+expect link
+key Enter
+wait 1000
+mark
+key Backspace
+expect Orcish Grunt
+mark
+key Left
+expect of
+key Down
+expect of
+key Escape
+wait 1500
+mark
+key C
+expect 7, 4
+
 # Repeat and history.
 mark
 key F12
-expect Wesnoth Access Commands
+expect 5 hexes north-east from your leader
+mark
+key Shift+F12
+expect of
 
 quit
