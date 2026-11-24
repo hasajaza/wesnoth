@@ -156,6 +156,12 @@ public:
 		variables_.add(key, std::move(value));
 	}
 
+	/** Wesnoth Access: reads a canvas variable (text drawn directly on a canvas, e.g. the outro). */
+	wfl::variant access_variable(const std::string& key) const
+	{
+		return variables_.query_value(key);
+	}
+
 private:
 	/** Vector with the shapes to draw. */
 	std::vector<std::unique_ptr<shape>> shapes_;

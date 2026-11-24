@@ -1,0 +1,31 @@
+# Wesnoth Access end-to-end test: dialogue choices, narrator message, victory.
+#ARGS: -t access_dialogue_test
+
+wait-dialog 180000 wml_message_left
+expect Hero
+expect Which way shall we go?
+# The options are a list: the first one is focused and read.
+expect Through the forest
+mark
+key F4
+expect Along the river
+mark
+key Down
+expect Along the river
+expect 2 of 2
+key Enter
+# The choice changed the scenario: the next message uses it.
+wait-for 20000 You chose the river path
+expect-not wml message
+mark
+key F11
+expect river path
+mark
+key Shift+F11
+expect Which way shall we go?
+key Enter
+# End of the scenario: the outro text is read.
+wait-dialog 30000 outro
+wait 2000
+expect End of scenario
+quit

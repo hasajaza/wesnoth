@@ -1342,7 +1342,7 @@ void on_other_turn_end(play_controller& pc, int side)
 
 void on_linger(play_controller& pc)
 {
-	if(!enabled() || g.pc != &pc) {
+	if(!enabled() || g.pc != &pc || !pc.is_linger_mode()) {
 		return;
 	}
 	speak(_("The scenario is over. You can still review the map. Press Control Space to end the scenario."), msg::important);

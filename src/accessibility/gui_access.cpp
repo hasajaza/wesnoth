@@ -414,6 +414,17 @@ collection collect_window(window& win)
 	collection c;
 	std::string pending;
 	collect(win.get_grid(), c, pending);
+	if(win.id() == "outro") {
+		// The outro draws its text directly on the window canvas.
+		try {
+			wfl::variant v = win.get_canvas(0).access_variable("outro_text");
+			std::string text = v.is_string() ? plain_text(v.as_string()) : std::string();
+			if(!text.empty()) {
+				c.texts.push_back({&win, "outro_text", text, true});
+			}
+		} catch(...) {
+		}
+	}
 	return c;
 }
 
@@ -613,7 +624,12 @@ std::string window_title(window& win, const collection& c)
 			}
 		}
 	}
+	if(win.id().compare(0, 11, "wml_message") == 0) {
+		// A message without a speaker (narrator): no title.
+		return std::string();
+	}
 	static const std::map<std::string, const char*> known {
+		{"outro", N_("End of scenario")},
 		{"title_screen", N_("Main menu")},
 		{"campaign_selection", N_("Campaign selection")},
 		{"campaign_difficulty", N_("Select difficulty")},
