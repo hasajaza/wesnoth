@@ -334,7 +334,7 @@ std::string plain_text(const std::string& markup)
 	tidy.reserve(res.size());
 	for(std::size_t i = 0; i < res.size(); ++i) {
 		const char c = res[i];
-		const bool punct = c == '.' || c == ',' || c == ';' || c == '!' || c == '?';
+		const bool punct = c == '.' || c == ',' || c == ';' || c == '!' || c == '?' || c == ':';
 		if(punct && !tidy.empty() && tidy.back() == ' ') {
 			tidy.pop_back();
 		}
@@ -358,6 +358,91 @@ std::string plain_text(const std::string& markup)
 	return tidy;
 }
 
+std::string spoken_form(const std::string& text)
+{
+	// Screen readers pause at every colon: "HP: 39 Moves: 6" is read as
+	// "H P (pause) 39 moves (pause) 6". Short "label: value" pairs are spoken
+	// as "hit points 39, moves 6" instead; longer texts keep their colons.
+	std::vector<std::string> t;
+	{
+		std::string cur;
+		for(char c : text) {
+			if(c == ' ') {
+				if(!cur.empty()) {
+					t.push_back(cur);
+				}
+				cur.clear();
+			} else {
+				cur += c;
+			}
+		}
+		if(!cur.empty()) {
+			t.push_back(cur);
+		}
+	}
+	for(std::string& w : t) {
+		const std::size_t e = w.find_last_not_of(":,.;");
+		if(e == std::string::npos) {
+			continue;
+		}
+		std::string core = w.substr(0, e + 1);
+		const std::string tail = w.substr(e + 1);
+		if(core == "HP") {
+			core = _("hit points");
+		} else if(core == "XP") {
+			core = _("experience");
+		} else if(core == "MP") {
+			core = _("moves");
+		}
+		w = core + tail;
+	}
+	auto alpha = [](char c) { return std::isalpha(static_cast<unsigned char>(c)) != 0; };
+	auto is_label = [&](const std::string& w) {
+		return w.size() > 1 && w.back() == ':' && (alpha(w[w.size() - 2]) || w[w.size() - 2] == ')');
+	};
+	auto is_number = [](const std::string& w) {
+		std::size_t i = (!w.empty() && (w[0] == '+' || w[0] == '-' || w[0] == '(')) ? 1 : 0;
+		return i < w.size() && std::isdigit(static_cast<unsigned char>(w[i])) != 0;
+	};
+	auto lower_word = [](const std::string& w) {
+		if(w.empty()) {
+			return false;
+		}
+		for(char c : w) {
+			if(!(std::islower(static_cast<unsigned char>(c)) || c == '-')) {
+				return false;
+			}
+		}
+		return true;
+	};
+	auto starts_upper = [](const std::string& w) { return !w.empty() && std::isupper(static_cast<unsigned char>(w[0])) != 0; };
+	auto ends_punct = [](const std::string& w) {
+		return !w.empty() && std::string(",.;:!?").find(w.back()) != std::string::npos;
+	};
+	const std::size_t n = t.size();
+	for(std::size_t i = 0; i + 1 < n; ++i) {
+		if(!is_label(t[i])) {
+			continue;
+		}
+		const std::string& v = t[i + 1];
+		bool label_follows = false;
+		for(std::size_t j = i + 2; j < n && j < i + 5; ++j) {
+			if(is_label(t[j])) {
+				label_follows = true;
+				break;
+			}
+		}
+		const bool next_upper = i + 2 < n && starts_upper(t[i + 2]);
+		if(is_number(v) || (lower_word(v) && next_upper && label_follows)) {
+			t[i].pop_back();
+			if((next_upper || label_follows) && i + 2 < n && !ends_punct(v)) {
+				t[i + 1] += ",";
+			}
+		}
+	}
+	return join(t, " ");
+}
+
 std::string join(const std::vector<std::string>& parts, const std::string& sep)
 {
 	std::string res;
@@ -378,7 +463,7 @@ void speak(const std::string& raw, msg kind)
 	if(!g_enabled) {
 		return;
 	}
-	std::string text = plain_text(raw);
+	std::string text = spoken_form(plain_text(raw));
 	if(text.empty()) {
 		return;
 	}

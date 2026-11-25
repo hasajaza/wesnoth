@@ -15,6 +15,7 @@
 #include "accessibility/help_access.hpp"
 
 #include "accessibility/accessibility.hpp"
+#include "accessibility/gui_access.hpp"
 
 #include "config.hpp"
 #include "gettext.hpp"
@@ -31,6 +32,11 @@
 
 namespace accessibility
 {
+
+namespace
+{
+help_reader* g_active_reader = nullptr;
+}
 namespace
 {
 std::string clean_title(const std::string& t)
@@ -111,7 +117,9 @@ help_reader::help_reader(const help::section& toplevel, help::help_browser& brow
 	: events::sdl_handler(true)
 	, toplevel_(toplevel)
 	, browser_(browser)
+	, depth_(gui::stack_depth())
 {
+	g_active_reader = this;
 	rebuild();
 	const help::topic* t = find(start_topic);
 	std::string intro = _("Help. Up and Down move, Enter opens, Escape closes.");
@@ -127,7 +135,29 @@ help_reader::help_reader(const help::section& toplevel, help::help_browser& brow
 
 help_reader::~help_reader()
 {
+	if(g_active_reader == this) {
+		g_active_reader = nullptr;
+	}
 	log("help reader closed");
+}
+
+void help_reader::refocus()
+{
+	speak(_("Help"), msg::reply);
+	if(reading_) {
+		say_paragraph();
+	} else {
+		say_item(true);
+	}
+}
+
+bool help_reader_refocus(std::size_t depth)
+{
+	if(!g_active_reader || depth > g_active_reader->dialog_depth()) {
+		return false;
+	}
+	g_active_reader->refocus();
+	return true;
 }
 
 const help::topic* help_reader::find(const std::string& id) const
@@ -394,6 +424,12 @@ bool help_reader::handle_reading_key(int key, unsigned mod)
 void help_reader::handle_event(const SDL_Event& event)
 {
 	if(!enabled()) {
+		return;
+	}
+	// A dialog opened while the help is shown (for example the game's quit
+	// question) has its own event loop but shares this event context: keys
+	// belong to that dialog, not to the help underneath.
+	if(gui::stack_depth() > depth_) {
 		return;
 	}
 	if(event.type == SDL_TEXTINPUT) {

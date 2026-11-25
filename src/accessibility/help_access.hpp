@@ -57,6 +57,12 @@ public:
 
 	void handle_event(const SDL_Event& event) override;
 
+	/** Announces the help again (window focus regained). */
+	void refocus();
+
+	/** Number of GUI dialogs that were open when the help started. */
+	std::size_t dialog_depth() const { return depth_; }
+
 	/** True once the user closed the help with Escape. */
 	bool closed() const { return closed_; }
 
@@ -95,6 +101,14 @@ private:
 	std::vector<const help::topic*> history_;
 	bool closed_ = false;
 	bool suppress_text_ = false;
+	std::size_t depth_ = 0;
 };
+
+/**
+ * Called when the game window gets the focus back: if a help reader is open
+ * and no newer dialog is above it (depth = open dialogs), it announces itself
+ * and true is returned.
+ */
+bool help_reader_refocus(std::size_t depth);
 
 } // namespace accessibility

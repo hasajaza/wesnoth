@@ -26,6 +26,14 @@ Changes after the first JAWS test (same version number until release)
   attacked, or no enemy within reach, naming the nearest enemy); selecting a
   unit says "no enemy within reach this turn"; Ctrl+Enter onto an enemy
   says "Next to ..." and keeps the unit selected so Enter attacks.
+- Short "label: value" pairs are spoken without the colon pause: "HP: 39
+  Moves: 6" becomes "hit points 39, moves 6" (HP, XP and MP are spelled
+  out); longer sentences keep their colons.
+- A dialog that opens while the help is shown (for example the game's quit
+  question) now gets the keys instead of the help underneath; returning to
+  the game window while the help is open announces the help.
+- No stray ": " before list items in change announcements; "1 unit",
+  "1 visible enemy", "1 allied unit".
 - Permanent download link for the newest tested build (see INSTALL.txt).
 
 0.1.0 (first test version, for Battle for Wesnoth 1.18.8)

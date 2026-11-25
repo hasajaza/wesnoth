@@ -145,6 +145,9 @@ int run_selftest(const std::string& report_path, const commandline_options& cmdl
 /** Removes Pango/HTML style markup and decodes entities. */
 std::string plain_text(const std::string& markup);
 
+/** Turns short "label: value" pairs into "label value," and expands HP/XP/MP, for speech. */
+std::string spoken_form(const std::string& text);
+
 /** Joins the non-empty parts with ", ". */
 std::string join(const std::vector<std::string>& parts, const std::string& sep = ", ");
 

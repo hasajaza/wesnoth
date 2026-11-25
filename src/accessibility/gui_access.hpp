@@ -79,4 +79,7 @@ bool dialog_active();
 /** Id of the topmost modal GUI2 window, empty if none (tests). */
 std::string top_window_id();
 
+/** Number of modal dialogs currently open (help reader uses it to step aside for newer dialogs). */
+std::size_t stack_depth();
+
 } // namespace accessibility::gui

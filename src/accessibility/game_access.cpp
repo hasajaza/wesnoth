@@ -785,23 +785,23 @@ std::string explain_no_targets()
 	}
 	const std::string name = short_name(*sel);
 	if(sel->attacks_left() == 0) {
-		return name + " " + _("has already attacked this turn. Every unit can attack once per turn.");
+		return name + " " + _("has already attacked this turn. Every unit can attack once per turn");
 	}
 	std::vector<std::string> parts;
-	parts.push_back(name + " " + _("cannot reach any enemy this turn."));
-	parts.push_back(_("To attack, a unit must stand next to the enemy. It can move and then attack in the same turn, but attacking ends its movement."));
+	parts.push_back(name + " " + _("cannot reach any enemy this turn"));
+	parts.push_back(_("To attack, a unit must stand next to the enemy. It can move and then attack in the same turn, but attacking ends its movement"));
 	if(const unit* e = nearest_enemy(sel->get_location())) {
 		parts.push_back(_("Nearest enemy") + std::string(": ") + short_name(*e) + ", "
 			+ relative_position(sel->get_location(), e->get_location()));
 	} else {
-		parts.push_back(_("No enemy is visible."));
+		parts.push_back(_("No enemy is visible"));
 	}
 	if(sel->movement_left() <= 0) {
-		parts.push_back(name + " " + _("has no moves left this turn."));
+		parts.push_back(name + " " + _("has no moves left this turn"));
 	} else {
-		parts.push_back(_("Put the cursor on the enemy, for example with F4, and press Control Enter to get as close as possible; attack next turn."));
+		parts.push_back(_("Put the cursor on the enemy, for example with F4, and press Control Enter to get as close as possible; attack next turn"));
 	}
-	return join(parts, " ");
+	return join(parts, ". ") + ".";
 }
 
 void cycle_list(list_kind kind, int direction)
@@ -1217,13 +1217,13 @@ std::string counts_text()
 	int enemies = static_cast<int>(build_list(L_ENEMIES).size());
 	int allies = static_cast<int>(build_list(L_ALLIES).size());
 	std::vector<std::string> parts {
-		std::to_string(mine) + " " + _("units"),
+		std::to_string(mine) + " " + (mine == 1 ? _("unit") : _("units")),
 		std::to_string(act) + " " + _("can still act"),
 		std::to_string(wounded) + " " + _("wounded"),
-		std::to_string(enemies) + " " + _("visible enemies"),
+		std::to_string(enemies) + " " + (enemies == 1 ? _("visible enemy") : _("visible enemies")),
 	};
 	if(allies > 0) {
-		parts.push_back(std::to_string(allies) + " " + _("allied units"));
+		parts.push_back(std::to_string(allies) + " " + (allies == 1 ? _("allied unit") : _("allied units")));
 	}
 	return join(parts);
 }

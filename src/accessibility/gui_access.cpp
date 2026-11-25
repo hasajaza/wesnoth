@@ -15,6 +15,7 @@
 #include "accessibility/gui_access.hpp"
 
 #include "accessibility/accessibility.hpp"
+#include "accessibility/help_access.hpp"
 #include "accessibility/keymap.hpp"
 
 #include "actions/attack.hpp"
@@ -1176,6 +1177,11 @@ bool dialog_active()
 	return !g_stack.empty();
 }
 
+std::size_t stack_depth()
+{
+	return g_stack.size();
+}
+
 std::string top_window_id()
 {
 	return g_stack.empty() ? std::string() : g_stack.back()->id();
@@ -1299,6 +1305,10 @@ void focus_regained()
 	if(!enabled()) {
 		return;
 	}
+	// The help reader is above every dialog that was open when it started.
+	if(help_reader_refocus(g_stack.size())) {
+		return;
+	}
 	if(!g_stack.empty()) {
 		window& win = *g_stack.back();
 		collection c = collect_window(win);
@@ -1388,7 +1398,10 @@ void announce_changes(window& win, window_state& st, bool from_key)
 			}
 			std::string v = control_value(f, false);
 			if(f.w != st.focus) {
-				v = control_name(f) + ": " + v;
+				const std::string name = control_name(f);
+				if(!name.empty()) {
+					v = name + ", " + v;
+				}
 			}
 			if(!control_active(f)) {
 				v += ", " + std::string(_("unavailable"));

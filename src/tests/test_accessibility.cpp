@@ -194,4 +194,19 @@ BOOST_AUTO_TEST_CASE(test_speak_is_silent_when_disabled)
 	BOOST_CHECK_EQUAL(accessibility::last_spoken(), before);
 }
 
+BOOST_AUTO_TEST_CASE(test_spoken_form_reads_label_value_pairs_without_pauses)
+{
+	using accessibility::spoken_form;
+	BOOST_CHECK_EQUAL(spoken_form("HP: 29 Moves: 6 Cost: 17 Alignment: neutral Required XP: 44"),
+		"hit points 29, Moves 6, Cost 17, Alignment neutral, Required experience 44");
+	BOOST_CHECK_EQUAL(spoken_form("HP: 39/39 XP: 0/37"), "hit points 39/39, experience 0/37");
+	BOOST_CHECK_EQUAL(spoken_form("Lawful units: +25%. Chaotic units: -25%."), "Lawful units +25%. Chaotic units -25%.");
+	BOOST_CHECK_EQUAL(spoken_form("Chance to kill Quintain: 82%."), "Chance to kill Quintain 82%.");
+	// Colons before ordinary text stay.
+	BOOST_CHECK_EQUAL(spoken_form("Note: These dummies only attack"), "Note: These dummies only attack");
+	BOOST_CHECK_EQUAL(spoken_form("Time of day: Morning."), "Time of day: Morning.");
+	BOOST_CHECK_EQUAL(spoken_form("Traits: strong, quick"), "Traits: strong, quick");
+	BOOST_CHECK_EQUAL(spoken_form("Victory: Defeat the orc leader"), "Victory: Defeat the orc leader");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

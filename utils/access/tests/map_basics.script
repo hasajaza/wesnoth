@@ -124,7 +124,7 @@ expect Defeat the orc leader
 mark
 key Ctrl+F9
 expect 2 units
-expect 1 visible enemies
+expect 1 visible enemy
 
 rng-unchanged
 
