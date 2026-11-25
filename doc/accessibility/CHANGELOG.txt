@@ -34,6 +34,12 @@ Changes after the first JAWS test (same version number until release)
   the game window while the help is open announces the help.
 - No stray ": " before list items in change announcements; "1 unit",
   "1 visible enemy", "1 allied unit".
+- Lists with column titles (unit list Alt+U, status table Alt+S,
+  statistics, and others) read each value with its title: "Type Spearman,
+  Name Pike, Moves 5/5, hit points 36/36, level 1, experience 41/42".
+- The game's quit question starts on "No"; Tab reaches "Yes".
+- Shift+Z: which visible enemies could attack the tile under the cursor
+  on their next turn.
 - Permanent download link for the newest tested build (see INSTALL.txt).
 
 0.1.0 (first test version, for Battle for Wesnoth 1.18.8)

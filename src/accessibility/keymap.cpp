@@ -87,6 +87,7 @@ const command_info infos[] = {
 	{command::where_am_i,         "where_am_i",         context::map, N_("Cursor coordinates and direction from the selected unit"), "C"},
 	{command::map_info,           "map_info",           context::map, N_("Map size and scenario name"), "Shift+C"},
 	{command::adjacent,           "adjacent",           context::map, N_("Describe the six tiles around the cursor"), "Z"},
+	{command::threats,            "threats",            context::map, N_("Which visible enemies could attack the tile under the cursor next turn"), "Shift+Z"},
 	{command::goto_selected,      "goto_selected",      context::map, N_("Cursor to the selected unit"), "Home"},
 	{command::goto_leader,        "goto_leader",        context::map, N_("Cursor to your leader"), "Shift+Home"},
 	{command::goto_previous,      "goto_previous",      context::map, N_("Cursor back to the previous location"), "Backspace"},

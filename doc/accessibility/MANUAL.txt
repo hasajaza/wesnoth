@@ -39,6 +39,9 @@ All of the game's menus and dialogs work the same way:
 - Enter or Space presses a button; Space toggles a check box. In a list,
   Enter normally confirms the dialog (the OK button).
 - Escape closes the dialog.
+- In lists with column titles (unit list, status table, statistics, saved
+  games), every value is read with its column title, for example "Type
+  Spearman, Name Pike, Moves 5/5, hit points 36/36".
 - F4 reads the whole dialog including every item of every list.
   Shift+F4 describes the focused control in detail.
 - On long texts (Tab to them), Up and Down read sentence by sentence.
@@ -98,7 +101,9 @@ coordinates, 1 to 9 to bookmarks (set with Ctrl+1 to Ctrl+9).
 
 Useful information keys: X (full tile), V and Shift+V (unit details,
 including weapons with the current damage, resistances and advancement),
-Z (the six neighbours), C (coordinates and distances), F8 (objectives),
+Z (the six neighbours), Shift+Z (which visible enemies could attack the
+tile under the cursor next turn: check this before ending a unit's move
+there), C (coordinates and distances), F8 (objectives),
 F9 (gold and turn), Shift+F9 (time of day), Ctrl+F9 (unit counts).
 
 Lists move the cursor to each item in turn: F3 your units, Ctrl+F3 units
@@ -193,7 +198,8 @@ Ctrl+S saves (the save dialog proposes a name; Enter saves). Ctrl+O loads
 (the list of saved games, newest first; Enter loads). In the main menu,
 Load does the same. On the map, Escape first clears the selection; with
 nothing selected, a second Escape opens the game's quit question (so it is
-not opened by accident). Ctrl+Q quits to the desktop after a confirmation.
+not opened by accident). The quit question starts on "No"; press Tab to
+reach "Yes". Ctrl+Q quits to the desktop after a confirmation.
 
 
 8. THE GAME'S HELP

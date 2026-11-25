@@ -76,6 +76,8 @@ V                  Unit under the cursor: type, name, side, level, hit points,
 Shift+V            Everything in V plus weapon specials, resistances, advancement,
                    movement costs, terrain defense and vision
 Z                  The six tiles around the cursor
+Shift+Z            Danger check: which visible enemies could attack the tile under
+                   the cursor on their next turn (like the game's "show enemy moves")
 F8                 Scenario objectives
 F9                 Turn, side, gold, income, upkeep and villages
 Shift+F9           Time of day and its effect

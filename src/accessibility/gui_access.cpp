@@ -499,6 +499,90 @@ std::string special_content(window& win, std::vector<std::string>* review)
 	return std::string();
 }
 
+/** Descends through single-cell wrappers (toggle panels, panels, grids) to the grid holding the columns. */
+grid* columns_grid(grid& g)
+{
+	grid* cur = &g;
+	for(int depth = 0; depth < 6; ++depth) {
+		if(cur->get_rows() != 1 || cur->get_cols() != 1) {
+			break;
+		}
+		widget* w = cur->get_widget(0, 0);
+		if(auto* cb = dynamic_cast<container_base*>(w)) {
+			cur = &cb->get_grid();
+		} else if(auto* gg = dynamic_cast<grid*>(w)) {
+			cur = gg;
+		} else {
+			break;
+		}
+	}
+	return cur;
+}
+
+/** Caption of a list header cell: the labels of its labels and sort buttons, without states. */
+void header_texts(widget& w, std::vector<std::string>& out)
+{
+	if(auto* g = dynamic_cast<grid*>(&w)) {
+		for(unsigned row = 0; row < g->get_rows(); ++row) {
+			for(unsigned col = 0; col < g->get_cols(); ++col) {
+				if(widget* c = g->get_widget(row, col)) {
+					header_texts(*c, out);
+				}
+			}
+		}
+		return;
+	}
+	if(auto* cb = dynamic_cast<container_base*>(&w)) {
+		header_texts(cb->get_grid(), out);
+		return;
+	}
+	if(dynamic_cast<label*>(&w) || dynamic_cast<toggle_button*>(&w) || dynamic_cast<button*>(&w)) {
+		std::string t = label_of(*static_cast<styled_widget*>(&w));
+		if(t.empty()) {
+			t = tooltip_of(*static_cast<styled_widget*>(&w));
+		}
+		out.push_back(t);
+	}
+}
+
+/**
+ * A row of a list with column headers (unit list, status table, statistics)
+ * read as "Type Spearman, Name Pike, HP 36/36": a sighted player reads every
+ * value under its column title. Empty when the list has no matching header.
+ */
+std::string row_with_headers(listbox& l, grid& row)
+{
+	grid* header = find_widget<grid>(&l, "_header_grid", false, false);
+	if(!header || !is_shown(*header)) {
+		return std::string();
+	}
+	grid* hc = columns_grid(*header);
+	grid* rc = columns_grid(row);
+	if(hc->get_rows() != 1 || rc->get_rows() != 1 || hc->get_cols() != rc->get_cols() || hc->get_cols() < 2) {
+		return std::string();
+	}
+	std::vector<std::string> parts;
+	for(unsigned col = 0; col < rc->get_cols(); ++col) {
+		widget* cell = rc->get_widget(0, col);
+		if(!cell) {
+			continue;
+		}
+		std::vector<std::string> v;
+		collect_row_texts(*cell, v);
+		std::string value = join(v);
+		if(value.empty()) {
+			continue;
+		}
+		std::vector<std::string> h;
+		if(widget* hcell = hc->get_widget(0, col)) {
+			header_texts(*hcell, h);
+		}
+		std::string head = join(h, " ");
+		parts.push_back(head.empty() || head == value ? value : head + " " + value);
+	}
+	return join(parts);
+}
+
 /** Text of one list row, with the special cases above. */
 std::string list_row_text(listbox& l, unsigned idx)
 {
@@ -507,7 +591,11 @@ std::string list_row_text(listbox& l, unsigned idx)
 		return special;
 	}
 	grid* g = l.get_row_grid(idx);
-	return g ? row_text(*g) : std::string();
+	if(!g) {
+		return std::string();
+	}
+	std::string with_headers = row_with_headers(l, *g);
+	return with_headers.empty() ? row_text(*g) : with_headers;
 }
 
 /** The unit a "Profile" button belongs to ("Profile of Konrad"), if any. */
@@ -1257,6 +1345,15 @@ void window_opened(window& win)
 	}
 
 	int idx = initial_focus(win, c);
+	if(win.id() == "message" && title == translation::gettext("Quit")) {
+		// The game's quit question: start on "No" so that an Enter pressed
+		// by habit does not end the game (Tab reaches "Yes").
+		for(std::size_t i = 0; i < c.controls.size(); ++i) {
+			if(c.controls[i].w->id() == "cancel") {
+				idx = static_cast<int>(i);
+			}
+		}
+	}
 	if(idx >= 0) {
 		const focusable& f = c.controls[idx];
 		// Do not repeat a long text that was just read as content.

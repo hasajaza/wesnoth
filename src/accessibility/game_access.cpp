@@ -1053,6 +1053,54 @@ void describe_adjacent()
 	speak(join(parts, ". "), msg::reply);
 }
 
+/**
+ * Shift+Z: the visible enemies that could attack the tile under the cursor on
+ * their next turn (they can reach a tile next to it), like the game's own
+ * "show enemy moves" display. Hidden and fogged enemies are not counted.
+ */
+void describe_threats()
+{
+	const map_location hex = g.cursor;
+	if(!on_board(hex)) {
+		return;
+	}
+	const team& viewing = g.pc->get_teams()[disp().viewing_team()];
+	std::vector<std::string> who;
+	for(const unit& e : board().units()) {
+		const map_location& eloc = e.get_location();
+		if(!viewing.is_enemy(e.side()) || e.incapacitated() || visible_unit(eloc) != &e || e.attacks().empty()) {
+			continue;
+		}
+		bool can = distance_between(eloc, hex) == 1;
+		if(!can && eloc != hex) {
+			// Full movement, as at the start of the enemy's turn.
+			const unit_movement_resetter reset(e);
+			const pathfind::paths reach(e, false, true, viewing, 0, false, false);
+			for(const map_location& adj : get_adjacent_tiles(hex)) {
+				if(on_board(adj) && reach.destinations.contains(adj) && (adj == eloc || !visible_unit(adj))) {
+					can = true;
+					break;
+				}
+			}
+		}
+		if(can) {
+			std::string name = plain_text(e.type_name());
+			if(!e.name().empty()) {
+				name += " " + plain_text(e.name());
+			}
+			who.push_back(name + ", " + std::to_string(e.hitpoints()) + " " + _("of") + " " + std::to_string(e.max_hitpoints())
+				+ " " + _("hit points") + ", " + relative_position(hex, eloc));
+		}
+	}
+	if(who.empty()) {
+		speak(_("No visible enemy can attack this tile next turn.") + std::string(" ") + coords(hex), msg::reply);
+		return;
+	}
+	const std::string head = who.size() == 1 ? std::string(_("1 visible enemy can attack this tile next turn"))
+		: std::to_string(who.size()) + " " + _("visible enemies can attack this tile next turn");
+	speak(head + ": " + join(who, "; ") + ". " + coords(hex), msg::reply);
+}
+
 void describe_route()
 {
 	const unit* sel = selected_unit();
@@ -1314,6 +1362,7 @@ bool execute(command cmd)
 	case command::where_am_i: where_am_i(); return true;
 	case command::map_info: map_info(); return true;
 	case command::adjacent: describe_adjacent(); return true;
+	case command::threats: describe_threats(); return true;
 	case command::goto_selected: goto_selected(); return true;
 	case command::goto_leader: goto_leader(); return true;
 	case command::goto_previous:

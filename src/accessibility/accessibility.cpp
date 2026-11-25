@@ -393,6 +393,8 @@ std::string spoken_form(const std::string& text)
 			core = _("experience");
 		} else if(core == "MP") {
 			core = _("moves");
+		} else if(core == "Lvl") {
+			core = _("level");
 		}
 		w = core + tail;
 	}

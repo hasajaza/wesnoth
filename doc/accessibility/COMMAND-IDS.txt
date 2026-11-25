@@ -36,6 +36,7 @@ describe_unit_full     (map   )  Shift+V         - Full unit details: attacks, r
 where_am_i             (map   )  C               - Cursor coordinates and direction from the selected unit
 map_info               (map   )  Shift+C         - Map size and scenario name
 adjacent               (map   )  Z               - Describe the six tiles around the cursor
+threats                (map   )  Shift+Z         - Which visible enemies could attack the tile under the cursor next turn
 goto_selected          (map   )  Home            - Cursor to the selected unit
 goto_leader            (map   )  Shift+Home      - Cursor to your leader
 goto_previous          (map   )  Backspace       - Cursor back to the previous location

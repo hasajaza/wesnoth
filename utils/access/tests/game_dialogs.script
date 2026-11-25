@@ -1,0 +1,75 @@
+# Wesnoth Access end-to-end test: in-game list dialogs read every value with
+# its column title; the quit question starts on "No".
+#ARGS: -t access_test
+
+# Hidden (ambushing) and fogged enemies must never be revealed.
+never Elvish Ranger
+never Orcish Warrior
+
+wait-for 180000 Your turn
+wait-dialog 20000 transient_message
+key Enter
+wait 800
+
+# Danger check (Shift+Z) on the Spearman's tile: the Grunt can reach it.
+key F3
+key F3
+mark
+key Shift+Z
+expect visible enemy can attack this tile next turn
+expect Orcish Grunt
+# Far away in the east (the fogged Orcish Warrior is not counted) no visible enemy reaches.
+key Ctrl+G
+wait-dialog 10000 edit_text
+text 16 8
+key Enter
+wait 800
+mark
+key Shift+Z
+expect No visible enemy can attack this tile next turn
+
+# Unit list (Alt+U).
+mark
+key Alt+U
+wait-dialog 15000 unit_list
+expect Type Lieutenant, Name Leader, Moves 6/6, hit points 30/40, level 2
+mark
+key Down
+expect Type Spearman, Name Pike
+expect experience 41/42
+key Escape
+wait 1000
+
+# Status table (Alt+S).
+mark
+key Alt+S
+wait-dialog 15000 game_stats
+expect Gold 100, Villages 0, Units 2, Upkeep 1, Income +1
+key Escape
+wait 1000
+
+# Statistics (Ctrl+Alt+S).
+mark
+key Ctrl+Alt+S
+wait-dialog 15000 statistics_dialog
+mark
+key F4
+expect Damage Inflicted, Overall
+key Escape
+wait 1000
+
+# Quit question: focus starts on No; Enter answers No and the game goes on.
+key Escape
+wait 300
+mark
+key Escape
+wait-dialog 15000 message
+expect Do you really want to quit
+expect No, button
+key Enter
+wait 1500
+mark
+key F9
+expect gold 100
+
+quit

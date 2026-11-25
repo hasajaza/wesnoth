@@ -54,8 +54,9 @@ Packaging
 
 Next steps (development)
 1. Fix problems found by the JAWS/NVDA checklist.
-2. Check the remaining dialogs one by one (preferences, add-ons, statistics,
-   unit list, status table, load game filters).
+2. Check the remaining dialogs one by one (preferences, add-ons, load game
+   filters). Unit list, status table and statistics are checked by the
+   game_dialogs test.
 3. Optional: spoken path preview while moving the cursor with a unit
    selected; spoken enemy reach.
 4. Translations of the accessibility texts.

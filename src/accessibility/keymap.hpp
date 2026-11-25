@@ -47,7 +47,7 @@ enum class command
 	jump_n, jump_ne, jump_se, jump_s, jump_sw, jump_nw,
 	select_action, approach, cancel,
 	describe_tile, describe_route, describe_unit, describe_unit_full, where_am_i, map_info,
-	adjacent, goto_selected, goto_leader, goto_previous, goto_coordinates,
+	adjacent, threats, goto_selected, goto_leader, goto_previous, goto_coordinates,
 	next_unit, prev_unit, next_active_unit, prev_active_unit, next_wounded, prev_wounded,
 	next_ally, prev_ally, next_enemy, prev_enemy,
 	next_village, prev_village, next_label, prev_label,
