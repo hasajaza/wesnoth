@@ -11,6 +11,12 @@ mark
 key Ctrl+Enter
 expect Select one of your units first
 
+# F7 without a selection explains what to do.
+mark
+key F7
+expect No attack options
+expect No unit is selected
+
 # Select the Spearman: the first selection gives a short how-to.
 key F3
 key F3
@@ -39,8 +45,16 @@ mark
 key Ctrl+Enter
 wait-for 15000 moved to
 expect your Spearman Pike moved to
+# The target is an enemy: the unit stays selected and Enter attacks.
+wait-for 5000 Next to
+expect Press Enter to open the attack dialog
 mark
 key C
 expect 7, 4
+key Enter
+wait-dialog 15000 unit_attack
+expect Chance to kill
+key Escape
+wait 1000
 
 quit

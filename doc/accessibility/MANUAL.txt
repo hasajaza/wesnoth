@@ -130,6 +130,16 @@ ambush or newly sighted enemies stop the move, that is announced; T
 continues the move. Shift+X describes the route before moving. U undoes a
 move, R redoes it.
 
+Moving and attacking in one turn: every unit can move AND attack in the
+same turn. To attack, it must stand on a hex next to the enemy (melee and
+ranged attacks alike). It can move first and then attack; attacking ends its
+movement, so attack last. Each unit attacks at most once per turn. If the
+enemy is too far away, move closer this turn (cursor on the enemy, for
+example with F4, then Ctrl+Enter) and attack next turn. When Ctrl+Enter
+brings the unit next to the enemy, you hear "Next to ..." and Enter opens
+the attack dialog. When F7 finds nothing, it says why: no unit selected,
+already attacked, or no enemy within reach, with the nearest enemy.
+
 Attack: F7 lists every enemy the selected unit can attack, once for every
 free hex it can attack from, with the defense of that hex. Press Enter: the
 game's attack dialog opens. You hear who attacks whom, then the selected

@@ -22,6 +22,10 @@ Changes after the first JAWS test (same version number until release)
 - Ctrl+Enter explains when the unit has no moves left; "1 enemy" instead
   of "1 enemies"; stray spaces before punctuation and the movement-cost
   hexagon symbols in the help are no longer read.
+- F7 explains why there is nothing to attack (no selection, already
+  attacked, or no enemy within reach, naming the nearest enemy); selecting a
+  unit says "no enemy within reach this turn"; Ctrl+Enter onto an enemy
+  says "Next to ..." and keeps the unit selected so Enter attacks.
 - Permanent download link for the newest tested build (see INSTALL.txt).
 
 0.1.0 (first test version, for Battle for Wesnoth 1.18.8)

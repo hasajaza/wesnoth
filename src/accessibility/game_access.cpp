@@ -748,12 +748,73 @@ std::string list_name(list_kind kind)
 	return std::string();
 }
 
+/** Short name of a unit: its own name, or its type ("Konrad", "Quintain"). */
+std::string short_name(const unit& u)
+{
+	return u.name().empty() ? plain_text(u.type_name()) : plain_text(u.name());
+}
+
+/** The nearest visible enemy of the viewing side, or nullptr. */
+const unit* nearest_enemy(const map_location& from)
+{
+	const unit* best = nullptr;
+	std::size_t best_d = 0;
+	for(const unit& e : board().units()) {
+		const map_location& eloc = e.get_location();
+		if(visible_unit(eloc) != &e || !viewer().is_enemy(e.side()) || e.incapacitated()) {
+			continue;
+		}
+		const std::size_t d = distance_between(from, eloc);
+		if(!best || d < best_d) {
+			best = &e;
+			best_d = d;
+		}
+	}
+	return best;
+}
+
+/** Why F7 has nothing to offer, and what to do instead. */
+std::string explain_no_targets()
+{
+	const unit* sel = selected_unit();
+	if(!sel) {
+		return _("No unit is selected. Select one of your units with Enter first; then F7 lists the enemies it can attack.");
+	}
+	if(sel->side() != viewing_side()) {
+		return _("The selected unit is not yours. Select one of your units with Enter first.");
+	}
+	const std::string name = short_name(*sel);
+	if(sel->attacks_left() == 0) {
+		return name + " " + _("has already attacked this turn. Every unit can attack once per turn.");
+	}
+	std::vector<std::string> parts;
+	parts.push_back(name + " " + _("cannot reach any enemy this turn."));
+	parts.push_back(_("To attack, a unit must stand next to the enemy. It can move and then attack in the same turn, but attacking ends its movement."));
+	if(const unit* e = nearest_enemy(sel->get_location())) {
+		parts.push_back(_("Nearest enemy") + std::string(": ") + short_name(*e) + ", "
+			+ relative_position(sel->get_location(), e->get_location()));
+	} else {
+		parts.push_back(_("No enemy is visible."));
+	}
+	if(sel->movement_left() <= 0) {
+		parts.push_back(name + " " + _("has no moves left this turn."));
+	} else {
+		parts.push_back(_("Put the cursor on the enemy, for example with F4, and press Control Enter to get as close as possible; attack next turn."));
+	}
+	return join(parts, " ");
+}
+
 void cycle_list(list_kind kind, int direction)
 {
 	std::vector<list_entry> items = build_list(kind);
 	if(items.empty()) {
+		if(kind == L_TARGETS) {
+			speak(_("No attack options.") + std::string(" ") + explain_no_targets(), msg::reply);
+			cue("error");
+			return;
+		}
 		std::string why;
-		if((kind == L_REACH || kind == L_TARGETS) && !selected_unit()) {
+		if(kind == L_REACH && !selected_unit()) {
 			why = _("Select a unit first with Enter.");
 		}
 		speak(join({_("No") + std::string(" ") + list_name(kind), why}, ". "), msg::reply);
@@ -879,11 +940,26 @@ void approach()
 	events::mouse_handler& mh = mouse();
 	mh.access_hover(best, g.pc->is_browsing());
 	mh.select_or_action(g.pc->is_browsing());
-	// Report how far the unit still is from the cursor's target.
+	// Report how far the unit still is from the cursor's target, and whether
+	// an enemy target can now be attacked.
 	if(const unit* moved = visible_unit(best); moved && moved->side() == viewing_side()) {
 		const int dist = static_cast<int>(distance_between(best, target));
-		if(dist > 0) {
-			speak(relative_position(best, target) + " " + _("to the target"), msg::event);
+		const unit* foe = visible_unit(target);
+		const bool enemy_target = foe && viewer().is_enemy(foe->side());
+		if(enemy_target && dist == 1 && moved->attacks_left() > 0) {
+			// Keep the unit selected so that Enter on the enemy attacks.
+			if(mh.get_selected_hex() != best) {
+				mh.access_hover(best, g.pc->is_browsing());
+				mh.select_or_action(g.pc->is_browsing());
+			}
+			speak(_("Next to") + std::string(" ") + short_name(*foe) + ". "
+				+ _("Press Enter to open the attack dialog; the cursor is on the enemy."), msg::event);
+		} else if(dist > 0) {
+			std::string text = relative_position(best, target) + " " + _("to the target");
+			if(enemy_target) {
+				text += ". " + std::string(_("Too far to attack this turn; a unit must stand next to the enemy to attack."));
+			}
+			speak(text, msg::event);
 		}
 	}
 	// The cursor stays on the target so the command can be repeated next turn.
@@ -1570,6 +1646,8 @@ void on_select(const map_location& hex)
 		}
 		if(targets > 0) {
 			parts.push_back(std::to_string(targets) + " " + (targets == 1 ? _("enemy in attack range") : _("enemies in attack range")));
+		} else if(u->attacks_left() > 0 && nearest_enemy(hex)) {
+			parts.push_back(_("no enemy within reach this turn"));
 		}
 	}
 	cue("select");
