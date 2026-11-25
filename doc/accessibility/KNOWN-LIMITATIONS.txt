@@ -49,8 +49,8 @@ Behaviour to be aware of
 Packaging
 - The overlay package needs an existing Battle for Wesnoth 1.18.8
   installation; other versions are refused or warned about.
-- Release packages on the GitHub Releases page have not been published yet;
-  builds are available as GitHub Actions artifacts.
+- Only test builds are published (the "access-latest" release, replaced by
+  every build that passes the tests); there are no numbered releases yet.
 
 Next steps (development)
 1. Fix problems found by the JAWS/NVDA checklist.

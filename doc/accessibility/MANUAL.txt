@@ -132,10 +132,22 @@ move, R redoes it.
 
 Attack: F7 lists every enemy the selected unit can attack, once for every
 free hex it can attack from, with the defense of that hex. Press Enter: the
-game's attack dialog opens. It lists your weapons, each with the enemy's
-retaliation, damage, strikes and chance to hit, as the game calculates them.
-Up and Down choose the weapon; Tab reaches "Damage Calculation" for the
-detailed probabilities; Enter attacks; Escape cancels. During the fight
+game's attack dialog opens. You hear who attacks whom, then the selected
+weapon as a sentence, for example:
+  "sword, melee, blade: 3 strikes of 6 damage, 80% chance to hit each.
+  Quintain strikes back with flail, impact: 5 strikes of 3 damage, 70%
+  chance to hit each, specials magical. Chance to kill Quintain: 0%.
+  Chance that Konrad dies: 0%. Expected hit points after the fight:
+  Konrad 22 of 32, Quintain 44 of 58."
+"3 strikes of 6 damage" means your unit swings 3 times; every swing that
+hits does 6 damage. The enemy strikes back with a weapon of the same range
+(melee or ranged); "cannot strike back" means it has no such weapon. The
+chances and expected hit points are the game's own calculation.
+Up and Down choose the weapon; Enter attacks; Escape cancels. Tab reaches
+"Damage Calculation" (all modifiers such as time of day, and every possible
+result with its probability; Up and Down read it line by line, Escape
+closes it) and the two profile buttons, "Profile of" your unit and the
+enemy, which open the game's help page of that unit type. During the fight
 every strike is announced (hit or miss, damage, hit points left, poisoned,
 slowed, killed), then the experience gained.
 

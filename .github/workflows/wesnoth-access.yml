@@ -240,3 +240,43 @@ jobs:
             build-linux.log
             build-linux/access-test-output/**
           if-no-files-found: ignore
+
+  # Publishes the tested overlay package under a permanent download link:
+  # https://github.com/<owner>/<repo>/releases/download/access-latest/WesnothAccess-win64-overlay.zip
+  # Only for pushes to the wesnoth-access branch (and manual runs on it), and
+  # only after the Windows smoke test and the Linux tests passed. The release
+  # asset is replaced; the tag itself is never moved.
+  publish-latest:
+    name: Publish permanent download link
+    needs: [ windows-smoke-test, linux-tests ]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/wesnoth-access'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: WesnothAccess-win64, path: pkg }
+
+      - name: Upload to the access-latest release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -e
+          overlay=$(ls pkg/WesnothAccess-*-overlay.zip | head -n 1)
+          test -n "$overlay"
+          cp "$overlay" WesnothAccess-win64-overlay.zip
+          sha256sum WesnothAccess-win64-overlay.zip > WesnothAccess-win64-overlay.zip.sha256
+          built="$(date -u '+%Y-%m-%d %H:%M UTC')"
+          notes="Latest tested build of Wesnoth Access for Battle for Wesnoth 1.18.8 (Windows 64-bit).
+
+          Download: https://github.com/${GH_REPO}/releases/download/access-latest/WesnothAccess-win64-overlay.zip
+
+          Built ${built} from commit ${GITHUB_SHA} ($(basename "$overlay")).
+          Unpack the zip anywhere and run Install.cmd. See INSTALL.txt in the zip."
+          if ! gh release view access-latest > /dev/null 2>&1; then
+            gh release create access-latest --title "Wesnoth Access - latest test build" --notes "$notes" --target "$GITHUB_SHA"
+          fi
+          gh release upload access-latest WesnothAccess-win64-overlay.zip WesnothAccess-win64-overlay.zip.sha256 --clobber
+          gh release edit access-latest --notes "$notes"

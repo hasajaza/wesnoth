@@ -17,8 +17,12 @@
 #include "accessibility/accessibility.hpp"
 #include "accessibility/keymap.hpp"
 
+#include "actions/attack.hpp"
+#include "attack_prediction.hpp"
 #include "gettext.hpp"
 #include "gui/auxiliary/find_widget.hpp"
+#include "gui/dialogs/attack_predictions.hpp"
+#include "gui/dialogs/unit_attack.hpp"
 #include "gui/widgets/button.hpp"
 #include "gui/widgets/container_base.hpp"
 #include "gui/widgets/generator.hpp"
@@ -43,14 +47,19 @@
 #include "gui/widgets/toggle_panel.hpp"
 #include "gui/widgets/tree_view.hpp"
 #include "gui/widgets/tree_view_node.hpp"
+#include "gui/widgets/unit_preview_pane.hpp"
 #include "gui/widgets/window.hpp"
 #include "serialization/unicode.hpp"
+#include "units/unit.hpp"
 
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_timer.h>
 
 #include <algorithm>
+#include <cmath>
+#include <iomanip>
 #include <map>
+#include <sstream>
 #include <set>
 #include <vector>
 
@@ -97,6 +106,8 @@ struct window_state
 	bool announced = false;
 	bool suppress_text_input = false;
 	std::size_t text_line = 0;  /**< Line reviewed in a focused long text. */
+	std::vector<std::string> review_lines; /**< Lines read with Up/Down on buttons (damage calculation). */
+	int review_pos = -1;
 };
 
 std::map<window*, window_state> g_windows;
@@ -219,6 +230,310 @@ std::string row_text(grid& g)
 	// Remove consecutive duplicates (labels repeated in tooltips).
 	parts.erase(std::unique(parts.begin(), parts.end()), parts.end());
 	return join(parts);
+}
+
+/*
+ * Combat dialogs. The game's attack dialog shows each weapon as three
+ * columns of numbers ("sword blade 6×3 80%, — melee —, flail impact 3×5
+ * magical 70%") and the damage calculation as a graph. They are read as
+ * sentences instead, from the same battle data the dialogs display. The
+ * outcome probabilities are the game's own (already calculated for the
+ * dialogs); nothing here uses the game's random number generator.
+ */
+
+std::string unit_label(const unit& u)
+{
+	return u.name().empty() ? u.type_name().str() : u.name().str();
+}
+
+std::string strikes_text(int n)
+{
+	return std::to_string(n) + " " + (n == 1 ? _("strike") : _("strikes"));
+}
+
+/** Probability (0..1) as spoken percentage: "0%", "0.2%", "35%". */
+std::string percent_text(double p)
+{
+	const double v = p * 100.0;
+	if(v <= 0.0) {
+		return "0%";
+	}
+	if(v < 0.1) {
+		return _("under 0.1%");
+	}
+	if(v >= 100.0) {
+		return "100%";
+	}
+	if(v > 99.9) {
+		return _("over 99.9%");
+	}
+	std::ostringstream o;
+	if(v < 10.0 || v > 99.0) {
+		o << std::fixed << std::setprecision(1) << v;
+	} else {
+		o << std::lround(v);
+	}
+	std::string r = o.str();
+	if(r.size() > 2 && r.compare(r.size() - 2, 2, ".0") == 0) {
+		r.erase(r.size() - 2);
+	}
+	return r + "%";
+}
+
+/** Lines of a label as plain text ("<b>sword</b>\nblade\n6×3 magical\n80%"). */
+std::vector<std::string> label_lines(const std::string& markup)
+{
+	std::vector<std::string> lines;
+	std::size_t start = 0;
+	while(start <= markup.size()) {
+		std::size_t nl = markup.find('\n', start);
+		std::string line = plain_text(markup.substr(start, nl == std::string::npos ? std::string::npos : nl - start));
+		lines.push_back(line);
+		if(nl == std::string::npos) {
+			break;
+		}
+		start = nl + 1;
+	}
+	return lines;
+}
+
+/**
+ * One side of a weapon row: "sword, blade: 6 damage, 3 strikes, 80% to hit,
+ * magical". Words (name, type, specials) come from the dialog's own labels,
+ * numbers from the battle statistics.
+ */
+std::string weapon_words(const std::string& label_markup, const battle_context_unit_stats& st, const std::string& range)
+{
+	std::vector<std::string> l = label_lines(label_markup);
+	std::string name = l.size() > 0 ? l[0] : std::string();
+	std::string type = l.size() > 1 ? l[1] : std::string();
+	std::string specials;
+	if(l.size() > 2) {
+		// "6×3 magical, marksman": everything after the numbers.
+		std::size_t sp = l[2].find(' ');
+		if(sp != std::string::npos) {
+			specials = l[2].substr(sp + 1);
+		}
+	}
+	std::string head = join({name, range, type});
+	// "3 strikes of 9 damage, 60% chance to hit each"
+	std::vector<std::string> parts {
+		strikes_text(st.num_blows) + " " + _("of") + " " + std::to_string(st.damage) + " " + _("damage"),
+		std::to_string(st.chance_to_hit) + "% " + (st.num_blows == 1 ? _("chance to hit") : _("chance to hit each")),
+		specials.empty() ? std::string() : _("specials") + std::string(" ") + specials,
+	};
+	return head + (head.empty() ? "" : ": ") + join(parts);
+}
+
+/** Outcome of a fight, from the game's own probability calculation. */
+std::string outcome_text(battle_context& bc, const unit& au, const unit& du)
+{
+	const battle_context_unit_stats& as = bc.get_attacker_stats();
+	const battle_context_unit_stats& ds = bc.get_defender_stats();
+	const combatant& ca = bc.get_attacker_combatant();
+	const combatant& cd = bc.get_defender_combatant();
+	const std::string an = unit_label(au);
+	const std::string dn = unit_label(du);
+	std::vector<std::string> parts;
+	parts.push_back(_("Chance to kill") + std::string(" ") + dn + ": " + percent_text(cd.hp_dist.empty() ? 0.0 : cd.hp_dist[0]));
+	parts.push_back(_("Chance that") + std::string(" ") + an + " " + _("dies") + ": "
+		+ percent_text(ca.hp_dist.empty() ? 0.0 : ca.hp_dist[0]));
+	parts.push_back(_("Expected hit points after the fight") + std::string(": ") + an + " "
+		+ std::to_string(std::lround(ca.average_hp())) + " " + _("of") + " " + std::to_string(as.max_hp) + ", " + dn + " "
+		+ std::to_string(std::lround(cd.average_hp())) + " " + _("of") + " " + std::to_string(ds.max_hp));
+	if(as.poisons && !ds.is_poisoned && cd.poisoned > 0.0) {
+		parts.push_back(dn + " " + _("poisoned") + ": " + percent_text(cd.poisoned));
+	}
+	if(ds.poisons && !as.is_poisoned && ca.poisoned > 0.0) {
+		parts.push_back(an + " " + _("poisoned") + ": " + percent_text(ca.poisoned));
+	}
+	if(as.slows && !ds.is_slowed && cd.slowed > 0.0) {
+		parts.push_back(dn + " " + _("slowed") + ": " + percent_text(cd.slowed));
+	}
+	if(ds.slows && !as.is_slowed && ca.slowed > 0.0) {
+		parts.push_back(an + " " + _("slowed") + ": " + percent_text(ca.slowed));
+	}
+	return join(parts, ". ");
+}
+
+/** A weapon row of the attack dialog as a sentence; empty for other lists. */
+std::string attack_row_text(listbox& l, unsigned idx)
+{
+	auto* dlg = dynamic_cast<dialogs::unit_attack*>(l.get_window());
+	if(!dlg || l.id() != "weapon_list") {
+		return std::string();
+	}
+	std::vector<battle_context>& weapons = dlg->access_weapons();
+	unit_const_ptr au = dlg->access_attacker();
+	unit_const_ptr du = dlg->access_defender();
+	grid* g = l.get_row_grid(idx);
+	if(idx >= weapons.size() || !au || !du || !g) {
+		return std::string();
+	}
+	battle_context& bc = weapons[idx];
+	auto label_markup = [&](const std::string& id) {
+		auto* w = find_widget<styled_widget>(g, id, false, false);
+		return w ? w->get_label().str() : std::string();
+	};
+	std::string range = plain_text(label_markup("range"));
+	// "— melee —"
+	const std::string dash = "\xE2\x80\x94";
+	std::size_t p;
+	while((p = range.find(dash)) != std::string::npos) {
+		range.erase(p, dash.size());
+	}
+	range = plain_text(range);
+
+	std::vector<std::string> parts;
+	parts.push_back(weapon_words(label_markup("attacker_weapon"), bc.get_attacker_stats(), range));
+	if(bc.get_defender_stats().weapon && bc.get_defender_stats().num_blows > 0) {
+		parts.push_back(unit_label(*du) + " " + _("strikes back with") + " "
+			+ weapon_words(label_markup("defender_weapon"), bc.get_defender_stats(), std::string()));
+	} else {
+		parts.push_back(unit_label(*du) + " " + _("cannot strike back"));
+	}
+	parts.push_back(outcome_text(bc, *au, *du));
+	return join(parts, ". ");
+}
+
+/** Short introduction of the attack dialog: who attacks whom. */
+std::string attack_intro(window& win)
+{
+	auto* dlg = dynamic_cast<dialogs::unit_attack*>(&win);
+	if(!dlg) {
+		return std::string();
+	}
+	unit_const_ptr au = dlg->access_attacker();
+	unit_const_ptr du = dlg->access_defender();
+	if(!au || !du) {
+		return std::string();
+	}
+	auto who = [](const unit& u) {
+		std::string s = unit_label(u);
+		if(!u.name().empty()) {
+			s += ", " + u.type_name().str();
+		}
+		return s + ", " + _("level") + " " + std::to_string(u.level()) + ", " + std::to_string(u.hitpoints()) + " "
+			+ _("of") + " " + std::to_string(u.max_hitpoints()) + " " + _("hit points");
+	};
+	return who(*au) + " " + _("attacks") + " " + who(*du) + ". "
+		+ _("Up and Down choose the weapon; for each weapon you hear your damage, the enemy's answer and the chances. Enter attacks, Escape cancels, Tab reaches Damage Calculation and the unit profiles.");
+}
+
+/** The damage calculation dialog as lines: outcome first, then each side's details. */
+std::vector<std::string> prediction_lines(window& win)
+{
+	std::vector<std::string> lines;
+	auto* dlg = dynamic_cast<dialogs::attack_predictions*>(&win);
+	if(!dlg) {
+		return lines;
+	}
+	unit_const_ptr au = dlg->access_unit(true);
+	unit_const_ptr du = dlg->access_unit(false);
+	const std::string an = au ? unit_label(*au) : std::string(_("Attacker"));
+	const std::string dn = du ? unit_label(*du) : std::string(_("Defender"));
+	const combatant& ca = dlg->access_combatant(true);
+	const combatant& cd = dlg->access_combatant(false);
+
+	lines.push_back(_("Chance to kill") + std::string(" ") + dn + ": " + percent_text(cd.hp_dist.empty() ? 0.0 : cd.hp_dist[0]) + ". "
+		+ _("Chance that") + " " + an + " " + _("dies") + ": " + percent_text(ca.hp_dist.empty() ? 0.0 : ca.hp_dist[0]));
+
+	static const char* const ids[] {
+		"base_damage", "tod_modifier", "leadership_modifier", "slowed_modifier", "resis", "total_damage", "chance_to_hit", "chance_unscathed",
+	};
+	for(bool att : {true, false}) {
+		const std::string who = att ? an : dn;
+		const std::string prefix = att ? "attacker_" : "defender_";
+		std::vector<std::string> parts;
+		for(const char* id : ids) {
+			label* v = find_widget<label>(&win, prefix + id, false, false);
+			if(!v || !is_shown(*v)) {
+				continue;
+			}
+			std::string value = label_of(*v);
+			if(value.empty()) {
+				continue;
+			}
+			std::string name;
+			if(label* n = find_widget<label>(&win, prefix + id + "_label", false, false)) {
+				name = label_of(*n);
+				while(!name.empty() && (name.back() == ':' || name.back() == ' ')) {
+					name.pop_back();
+				}
+			}
+			parts.push_back(name.empty() ? value : name + " " + value);
+		}
+		lines.push_back((att ? _("Attacker") : _("Defender")) + std::string(" ") + who + ": " + join(parts));
+
+		const combatant& cb = att ? ca : cd;
+		std::vector<std::string> hp;
+		for(int h = static_cast<int>(cb.hp_dist.size()) - 1; h >= 0; --h) {
+			if(cb.hp_dist[h] >= 0.0005) {
+				hp.push_back(std::to_string(h) + " " + _("hit points") + " " + percent_text(cb.hp_dist[h]));
+			}
+		}
+		const auto& st = dlg->access_stats(att);
+		lines.push_back(who + " " + _("after the fight") + ": " + join(hp) + ". " + _("Expected") + " "
+			+ std::to_string(std::lround(cb.average_hp())) + " " + _("of") + " " + std::to_string(st.max_hp) + " " + _("hit points"));
+	}
+	return lines;
+}
+
+/** Replaces the generic text of some windows; empty when the generic reading is used. */
+std::string special_content(window& win, std::vector<std::string>* review)
+{
+	if(win.id() == "unit_attack") {
+		return attack_intro(win);
+	}
+	if(win.id() == "attack_predictions") {
+		std::vector<std::string> lines = prediction_lines(win);
+		if(lines.empty()) {
+			return std::string();
+		}
+		if(review) {
+			*review = lines;
+		}
+		return join(lines, ". ") + ". " + _("Up and Down read these lines one at a time.");
+	}
+	return std::string();
+}
+
+/** Text of one list row, with the special cases above. */
+std::string list_row_text(listbox& l, unsigned idx)
+{
+	std::string special = attack_row_text(l, idx);
+	if(!special.empty()) {
+		return special;
+	}
+	grid* g = l.get_row_grid(idx);
+	return g ? row_text(*g) : std::string();
+}
+
+/** The unit a "Profile" button belongs to ("Profile of Konrad"), if any. */
+std::string profile_owner(widget& w)
+{
+	for(widget* p = w.parent(); p; p = p->parent()) {
+		if(dynamic_cast<unit_preview_pane*>(p)) {
+			if(label* n = find_widget<label>(p, "type_name", false, false)) {
+				if(is_shown(*n) && !label_of(*n).empty()) {
+					return label_of(*n);
+				}
+			}
+			// Compact panes (attack dialog): "name\ntype\nLvl 1..." in one label.
+			if(auto* d = find_widget<styled_widget>(p, "type_details_minimal", false, false)) {
+				std::vector<std::string> l = label_lines(d->get_label().str());
+				std::vector<std::string> who;
+				for(std::size_t i = 0; i < l.size() && i < 2; ++i) {
+					if(!l[i].empty() && (who.empty() || who.back() != l[i])) {
+						who.push_back(l[i]);
+					}
+				}
+				return join(who);
+			}
+			return std::string();
+		}
+	}
+	return std::string();
 }
 
 generator_base* list_generator(listbox& l)
@@ -483,6 +798,13 @@ std::string control_name(const focusable& f)
 	if(f.r == role::toggle_panel) {
 		name = row_text(static_cast<toggle_panel*>(f.w)->get_grid());
 	}
+	if(f.r == role::button && f.w->id() == "type_profile") {
+		// Two "Profile" buttons in the attack dialog: say whose profile.
+		std::string owner = profile_owner(*f.w);
+		if(!owner.empty()) {
+			name = _("Profile of") + std::string(" ") + owner;
+		}
+	}
 	// Controls without their own caption (sliders, fields, menus, lists) are
 	// named by the visible label before them, like a sighted user reads them.
 	if(name.empty()) {
@@ -573,7 +895,7 @@ std::string control_value(const focusable& f, bool for_snapshot)
 		if(sel < 0 || pos < 0) {
 			return _("no item selected") + std::string(", ") + std::to_string(count) + " " + _("items");
 		}
-		std::string text = l->get_row_grid(sel) ? row_text(*l->get_row_grid(sel)) : std::string();
+		std::string text = list_row_text(*l, sel);
 		if(for_snapshot) {
 			return std::to_string(sel) + "\x01" + text;
 		}
@@ -821,7 +1143,8 @@ std::string read_all_text(window& win)
 	std::string title = window_title(win, c);
 	std::vector<std::string> parts {title};
 	// Interleave texts and controls in reading order is not tracked; read texts first, then controls.
-	parts.push_back(static_text(c, title));
+	std::string special = special_content(win, nullptr);
+	parts.push_back(special.empty() ? static_text(c, title) : special);
 	for(const focusable& f : c.controls) {
 		if(f.r == role::long_text) {
 			continue;
@@ -838,9 +1161,7 @@ std::string read_all_text(window& win)
 				if(idx >= n || (gen && !gen->get_item_shown(idx))) {
 					continue;
 				}
-				if(grid* g = l->get_row_grid(idx)) {
-					rows.push_back(row_text(*g));
-				}
+				rows.push_back(list_row_text(*l, idx));
 			}
 			if(!rows.empty()) {
 				parts.push_back(_("items") + std::string(": ") + join(rows, "; "));
@@ -917,6 +1238,8 @@ void window_opened(window& win)
 		std::string content = content_text(c);
 		parts.push_back(content.empty() ? static_text(c, title) : content);
 		record_dialogue(win, c);
+	} else if(std::string special = special_content(win, &st.review_lines); !special.empty()) {
+		parts.push_back(special);
 	} else {
 		std::string content = content_text(c);
 		std::string all = static_text(c, title);
@@ -1317,6 +1640,29 @@ bool key_before(window& win, const SDL_Event& event)
 		if(review_long_text(st, f, key)) {
 			return true;
 		}
+	}
+
+	if(f.r == role::button && plain && !st.review_lines.empty()
+		&& (key == SDLK_UP || key == SDLK_DOWN || key == SDLK_HOME || key == SDLK_END)) {
+		// Lines of a window without a text control (the damage calculation).
+		const int n = static_cast<int>(st.review_lines.size());
+		int pos = st.review_pos;
+		if(key == SDLK_DOWN) {
+			pos = pos + 1;
+		} else if(key == SDLK_UP) {
+			pos = pos - 1;
+		} else if(key == SDLK_HOME) {
+			pos = 0;
+		} else {
+			pos = n - 1;
+		}
+		if(pos < 0 || pos >= n) {
+			cue("edge");
+			pos = std::clamp(pos, 0, n - 1);
+		}
+		st.review_pos = pos;
+		speak(st.review_lines[pos], msg::nav);
+		return true;
 	}
 
 	if(f.r == role::menu && plain && (key == SDLK_UP || key == SDLK_DOWN)) {

@@ -53,6 +53,24 @@ public:
 		return selected_weapon_;
 	}
 
+	/** Wesnoth Access: read-only data for the screen reader. */
+	std::vector<battle_context>& access_weapons()
+	{
+		return weapons_;
+	}
+
+	/** Wesnoth Access: the attacking unit. */
+	unit_const_ptr access_attacker() const
+	{
+		return attacker_itor_.get_shared_ptr();
+	}
+
+	/** Wesnoth Access: the defending unit. */
+	unit_const_ptr access_defender() const
+	{
+		return defender_itor_.get_shared_ptr();
+	}
+
 private:
 	virtual const std::string& window_id() const override;
 

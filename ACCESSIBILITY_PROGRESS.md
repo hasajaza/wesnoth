@@ -19,6 +19,11 @@ in `.github/workflows/wesnoth-access.yml`).
 - CI: push to `wesnoth-access` (or run the "Wesnoth Access" workflow manually)
   -> artifact `WesnothAccess-win64` contains the overlay zip
   (and the standalone zip when the `standalone` input is set).
+  After the Windows smoke test and the Linux tests pass on `wesnoth-access`,
+  job `publish-latest` uploads the overlay zip to the release `access-latest`
+  under the fixed name `WesnothAccess-win64-overlay.zip` (permanent link:
+  https://github.com/hasajaza/wesnoth/releases/download/access-latest/WesnothAccess-win64-overlay.zip).
+  The tag is created once and never moved; only the asset and notes change.
 - Locally in a Linux container with docker:
   - Windows: `docker run --rm -v $SRC:/wesnoth -v $OUT:/output wesnoth/wesnoth:mingw-master sh -c 'cd /output && scons -j4 arch=x86-64 prefix=/msys64/mingw64 gtkdir=/msys64/mingw64 host=x86_64-w64-mingw32 -Y /wesnoth build=release nls=false wesnoth'`
   - Linux (tests): image `wesnoth/wesnoth:2204-master`; first remove the debug

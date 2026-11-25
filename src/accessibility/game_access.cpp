@@ -858,6 +858,16 @@ void approach()
 		return;
 	}
 	const map_location target = g.cursor;
+	if(sel->movement_left() <= 0) {
+		speak(_("This unit has no moves left this turn. Select another unit, or end your turn with Control Space."), msg::reply);
+		cue("error");
+		return;
+	}
+	if(target == sel->get_location()) {
+		speak(_("The cursor is on the selected unit. Put the cursor on the place you want to go to first."), msg::reply);
+		cue("error");
+		return;
+	}
 	int left = 0;
 	const map_location best = closest_reachable(*sel, target, &left);
 	if(!best.valid() || best == sel->get_location()) {
@@ -1546,7 +1556,11 @@ void on_select(const map_location& hex)
 				++reach;
 			}
 		}
-		parts.push_back(std::to_string(reach) + " " + _("reachable hexes"));
+		if(reach == 0 && u->movement_left() <= 0) {
+			parts.push_back(_("no moves left this turn"));
+		} else {
+			parts.push_back(std::to_string(reach) + " " + (reach == 1 ? _("reachable hex") : _("reachable hexes")));
+		}
 		int targets = 0;
 		std::set<map_location> seen;
 		for(const auto& e : build_list(L_TARGETS)) {
@@ -1555,7 +1569,7 @@ void on_select(const map_location& hex)
 			}
 		}
 		if(targets > 0) {
-			parts.push_back(std::to_string(targets) + " " + _("enemies in attack range"));
+			parts.push_back(std::to_string(targets) + " " + (targets == 1 ? _("enemy in attack range") : _("enemies in attack range")));
 		}
 	}
 	cue("select");
@@ -1610,13 +1624,19 @@ void on_attack_start(const unit& attacker, const unit& defender, const battle_co
 	if(!g.combat_visible) {
 		return;
 	}
+	auto blows = [](const battle_context_unit_stats& st) {
+		// "3 strikes of 6 damage, 80% chance to hit each"
+		return std::to_string(st.num_blows) + " " + (st.num_blows == 1 ? _("strike") : _("strikes")) + " " + _("of") + " "
+			+ std::to_string(st.damage) + " " + _("damage") + ", " + std::to_string(st.chance_to_hit) + "% "
+			+ (st.num_blows == 1 ? _("chance to hit") : _("chance to hit each"));
+	};
 	std::string aw = a.weapon ? plain_text(a.weapon->name()) : std::string();
-	std::string dw = d.weapon ? plain_text(d.weapon->name()) : std::string(_("no weapon"));
 	std::string text = unit_title(attacker) + " " + _("attacks") + " " + unit_title(defender) + " " + _("with") + " " + aw + ", "
-		+ std::to_string(a.damage) + "-" + std::to_string(a.num_blows) + ", " + std::to_string(a.chance_to_hit) + "% " + _("to hit")
-		+ ". " + _("Retaliation") + ": " + dw;
-	if(d.weapon) {
-		text += ", " + std::to_string(d.damage) + "-" + std::to_string(d.num_blows) + ", " + std::to_string(d.chance_to_hit) + "% " + _("to hit");
+		+ blows(a) + ". ";
+	if(d.weapon && d.num_blows > 0) {
+		text += _("Retaliation with") + std::string(" ") + plain_text(d.weapon->name()) + ", " + blows(d);
+	} else {
+		text += _("No retaliation");
 	}
 	event_message(text);
 }

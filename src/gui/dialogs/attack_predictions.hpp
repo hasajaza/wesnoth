@@ -39,6 +39,24 @@ public:
 
 	DEFINE_SIMPLE_DISPLAY_WRAPPER(attack_predictions)
 
+	/** Wesnoth Access: read-only data for the screen reader. */
+	const combatant& access_combatant(bool attacker) const
+	{
+		return attacker ? attacker_data_.combatant_ : defender_data_.combatant_;
+	}
+
+	/** Wesnoth Access: read-only data for the screen reader. */
+	const battle_context_unit_stats& access_stats(bool attacker) const
+	{
+		return attacker ? attacker_data_.stats_ : defender_data_.stats_;
+	}
+
+	/** Wesnoth Access: read-only data for the screen reader. */
+	unit_const_ptr access_unit(bool attacker) const
+	{
+		return attacker ? attacker_data_.unit_ : defender_data_.unit_;
+	}
+
 private:
 	virtual const std::string& window_id() const override;
 

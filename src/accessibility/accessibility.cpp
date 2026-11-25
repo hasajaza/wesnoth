@@ -320,7 +320,42 @@ std::string plain_text(const std::string& markup)
 			res += c;
 		}
 	}
-	return res;
+	// Drop symbols that screen readers spell out or that are invisible: the
+	// help's movement cost hexagons (U+2B23) and zero width spaces (U+200B).
+	for(const char* sym : {"\xE2\xAC\xA3", "\xE2\x80\x8B"}) {
+		std::size_t pos;
+		while((pos = res.find(sym)) != std::string::npos) {
+			res.erase(pos, 3);
+		}
+	}
+	// Spoken punctuation clean-up: "Attacking ." -> "Attacking.", "+0% .." -> "+0%.";
+	// an ellipsis ("...") is kept.
+	std::string tidy;
+	tidy.reserve(res.size());
+	for(std::size_t i = 0; i < res.size(); ++i) {
+		const char c = res[i];
+		const bool punct = c == '.' || c == ',' || c == ';' || c == '!' || c == '?';
+		if(punct && !tidy.empty() && tidy.back() == ' ') {
+			tidy.pop_back();
+		}
+		if(c == '.' && !tidy.empty() && tidy.back() == '.') {
+			const bool ellipsis = (i + 1 < res.size() && res[i + 1] == '.') || (tidy.size() >= 2 && tidy[tidy.size() - 2] == '.');
+			if(!ellipsis) {
+				continue;
+			}
+		}
+		if(c == ' ' && !tidy.empty() && (tidy.back() == ' ' || tidy.back() == '(')) {
+			continue;
+		}
+		if(c == ')' && !tidy.empty() && tidy.back() == ' ') {
+			tidy.pop_back();
+		}
+		tidy += c;
+	}
+	while(!tidy.empty() && tidy.back() == ' ') {
+		tidy.pop_back();
+	}
+	return tidy;
 }
 
 std::string join(const std::vector<std::string>& parts, const std::string& sep)

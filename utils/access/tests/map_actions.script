@@ -26,9 +26,43 @@ expect from 6, 3
 key Enter
 wait-dialog 15000 unit_attack
 expect Attack
+# The dialog says who attacks whom, and each weapon as a sentence with the
+# retaliation and the chances.
+expect Pike, Spearman, level 1
+expect attacks
+expect Orcish Grunt, level 1
+expect damage
+expect strikes
+expect chance to hit
+expect strikes back with
+expect Chance to kill
+expect Expected hit points after the fight
 mark
 key F4
 expect spear
+# The two profile buttons say whose profile they open.
+expect Profile of Pike, Spearman
+expect Orcish Grunt, button
+# The damage calculation is read as sentences; Up and Down review its lines.
+mark
+press-until 15000 Tab Damage Calculation, button
+key Enter
+wait-dialog 15000 attack_predictions
+expect Chance to kill
+expect after the fight
+expect Attacker Pike
+expect Defender
+mark
+key Down
+expect Chance to kill
+mark
+key Down
+expect Attacker Pike
+mark
+key Escape
+wait 800
+# Back in the attack dialog: return to the weapon list.
+press-until 15000 Tab list,
 # Confirm: the unit moves next to the Grunt and attacks.
 mark
 key Enter

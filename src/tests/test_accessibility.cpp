@@ -42,6 +42,11 @@ BOOST_AUTO_TEST_CASE(test_plain_text_removes_markup)
 	// A '<' that does not start a tag is kept.
 	BOOST_CHECK_EQUAL(plain_text("3 < 5"), "3 < 5");
 	BOOST_CHECK_EQUAL(plain_text(""), "");
+	BOOST_CHECK_EQUAL(plain_text("Attacking . To attack"), "Attacking. To attack");
+	BOOST_CHECK_EQUAL(plain_text("Chaotic: -25% .."), "Chaotic: -25%.");
+	BOOST_CHECK_EQUAL(plain_text("we have work to do..."), "we have work to do...");
+	BOOST_CHECK_EQUAL(plain_text("Base damage 7 ( <i>spear</i> )"), "Base damage 7 (spear)");
+	BOOST_CHECK_EQUAL(plain_text("Flat 40% 1 \xE2\xAC\xA3\xE2\x80\x8B\xE2\xAC\xA3\xE2\x80\x8B"), "Flat 40% 1");
 }
 
 BOOST_AUTO_TEST_CASE(test_join_skips_empty_parts)

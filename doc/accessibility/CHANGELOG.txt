@@ -13,6 +13,16 @@ Changes after the first JAWS test (same version number until release)
 - Ctrl+Enter moves the selected unit as close as possible to the cursor;
   hex descriptions name the closest reachable hex for unreachable places;
   the first selection explains how to move.
+- Attack dialog: each weapon is read as a sentence ("3 strikes of 6 damage,
+  80% chance to hit each"), with the enemy's answer, the chance to kill, the
+  chance to die and the expected hit points; the profile buttons say whose
+  profile they open; the damage calculation is read as lines (Up/Down),
+  including every possible result.
+- Attack announcements use the same wording instead of "6-3".
+- Ctrl+Enter explains when the unit has no moves left; "1 enemy" instead
+  of "1 enemies"; stray spaces before punctuation and the movement-cost
+  hexagon symbols in the help are no longer read.
+- Permanent download link for the newest tested build (see INSTALL.txt).
 
 0.1.0 (first test version, for Battle for Wesnoth 1.18.8)
 - Speech through JAWS, NVDA or SAPI with Universal Speech, on a worker thread.

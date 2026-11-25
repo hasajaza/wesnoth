@@ -32,17 +32,21 @@ games and preferences are shared with the normal game, so you can switch
 between the two at any time.
 
 
-DOWNLOADING FROM GITHUB
+DOWNLOADING
 
-Builds are produced automatically on GitHub Actions. With the GitHub command
-line tool (gh) you can download the newest successful one without a browser.
-In PowerShell, in the folder where the zip file should go:
+The newest tested build always has the same address (no GitHub account
+needed). Open it in your browser and the download starts:
 
-  gh run download $(gh run list --repo hasajaza/wesnoth --workflow wesnoth-access.yml --branch wesnoth-access --status success --limit 1 --json databaseId --jq ".[0].databaseId") --repo hasajaza/wesnoth --name WesnothAccess-win64
+  https://github.com/hasajaza/wesnoth/releases/download/access-latest/WesnothAccess-win64-overlay.zip
 
-This writes the zip file(s) into the current folder. When a release has
-been published, the same zip files are listed on the repository's Releases
-page.
+It is replaced automatically every time a new build has passed all tests.
+The release page with the build date and commit is:
+
+  https://github.com/hasajaza/wesnoth/releases/tag/access-latest
+
+In PowerShell you can also download it directly into your Downloads folder:
+
+  Invoke-WebRequest https://github.com/hasajaza/wesnoth/releases/download/access-latest/WesnothAccess-win64-overlay.zip -OutFile $HOME\Downloads\WesnothAccess-win64-overlay.zip
 
 
 INSTALLING THE OVERLAY PACKAGE
