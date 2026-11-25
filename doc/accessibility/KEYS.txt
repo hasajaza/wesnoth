@@ -99,6 +99,9 @@ Enter              On one of your units: select it.
                    With a unit selected, on an empty reachable tile: move there.
                    With a unit selected, on an enemy: open the attack dialog
                    (after F7, from the attack position you chose).
+Ctrl+Enter         Move the selected unit as close as possible to the cursor
+                   this turn (for example: Ctrl+F4 to an ally, then Ctrl+Enter).
+                   The cursor stays on the target, so you can repeat it next turn.
 Escape             Deselect the selected unit. With nothing selected, press
                    Escape twice (within 3 seconds) for the game's quit question.
 Ctrl+Alt+D         The game's own help page for the unit under the cursor

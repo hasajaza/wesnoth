@@ -369,6 +369,34 @@ std::vector<std::string> item_texts(const map_location& loc)
 	return res;
 }
 
+/**
+ * The free hex the selected unit can reach this turn that is closest to
+ * @a target (ties: more moves left). Invalid if none. Uses the paths the
+ * game computed for the selection.
+ */
+map_location closest_reachable(const unit& sel, const map_location& target, int* moves_left = nullptr)
+{
+	const pathfind::paths& paths = mouse().current_paths();
+	map_location best;
+	int best_dist = 0;
+	int best_left = -1;
+	for(const auto& d : paths.destinations) {
+		if(d.curr != sel.get_location() && visible_unit(d.curr)) {
+			continue;
+		}
+		const int dist = static_cast<int>(distance_between(d.curr, target));
+		if(!best.valid() || dist < best_dist || (dist == best_dist && d.move_left > best_left)) {
+			best = d.curr;
+			best_dist = dist;
+			best_left = d.move_left;
+		}
+	}
+	if(moves_left) {
+		*moves_left = best_left;
+	}
+	return best;
+}
+
 /** Defense, movement cost and reachability for the selected unit. */
 std::string selected_unit_terrain_info(const map_location& loc, bool include_reach)
 {
@@ -408,6 +436,14 @@ std::string selected_unit_terrain_info(const map_location& loc, bool include_rea
 			}
 		} else if(!paths.destinations.empty()) {
 			parts.push_back(_("out of reach this turn"));
+		}
+		if(dest == paths.destinations.end() && !paths.destinations.empty()) {
+			const map_location near = closest_reachable(*sel, loc);
+			if(near.valid() && near != sel->get_location()) {
+				parts.push_back(_("closest reachable hex") + std::string(" ") + coords(near) + ", "
+					+ std::to_string(distance_between(near, loc)) + " " + _("away") + ", "
+					+ _("Control Enter goes there"));
+			}
 		}
 	}
 	return join(parts);
@@ -807,6 +843,44 @@ void select_or_act()
 	}
 }
 
+/** Ctrl+Enter: move the selected unit as close as possible to the cursor. */
+void approach()
+{
+	const unit* sel = selected_unit();
+	if(!sel || sel->side() != viewing_side() || mouse().get_selected_hex() != sel->get_location()) {
+		speak(_("Select one of your units first: put the cursor on it and press Enter."), msg::reply);
+		cue("error");
+		return;
+	}
+	if(g.pc->is_browsing()) {
+		speak(_("It is not your turn."), msg::reply);
+		cue("error");
+		return;
+	}
+	const map_location target = g.cursor;
+	int left = 0;
+	const map_location best = closest_reachable(*sel, target, &left);
+	if(!best.valid() || best == sel->get_location()) {
+		speak(_("The unit cannot get closer to the cursor this turn."), msg::reply);
+		cue("error");
+		return;
+	}
+	debug("approach " + coords(target) + " via " + coords(best));
+	events::mouse_handler& mh = mouse();
+	mh.access_hover(best, g.pc->is_browsing());
+	mh.select_or_action(g.pc->is_browsing());
+	// Report how far the unit still is from the cursor's target.
+	if(const unit* moved = visible_unit(best); moved && moved->side() == viewing_side()) {
+		const int dist = static_cast<int>(distance_between(best, target));
+		if(dist > 0) {
+			speak(relative_position(best, target) + " " + _("to the target"), msg::event);
+		}
+	}
+	// The cursor stays on the target so the command can be repeated next turn.
+	g.cursor = target;
+	sync_hover(target);
+}
+
 void cancel_selection()
 {
 	events::mouse_handler& mh = mouse();
@@ -1146,6 +1220,7 @@ bool execute(command cmd)
 		move_cursor(dir_of(cmd), true);
 		return true;
 	case command::select_action: select_or_act(); return true;
+	case command::approach: approach(); return true;
 	case command::describe_tile: speak(describe_tile(g.cursor, 2, true), msg::reply); return true;
 	case command::describe_route: describe_route(); return true;
 	case command::describe_unit: describe_unit(false); return true;
@@ -1484,6 +1559,11 @@ void on_select(const map_location& hex)
 		}
 	}
 	cue("select");
+	static bool hint_given = false;
+	if(!hint_given && u->side() == viewing_side()) {
+		hint_given = true;
+		parts.push_back(_("Move the cursor to a destination and press Enter to move there, or put the cursor on any place, for example with Control F4 on an ally, and press Control Enter to go as close as possible"));
+	}
 	speak(join(parts, ". "), msg::reply);
 }
 

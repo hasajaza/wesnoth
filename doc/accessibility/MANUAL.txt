@@ -113,11 +113,22 @@ Select a unit: put the cursor on it (for example with F3 or the game's own
 N key) and press Enter. You hear "Selected", the unit, how many hexes it can
 reach and how many enemies it can attack.
 
-Move: F6 lists the hexes the unit can reach this turn with the moves left
-after arriving. Put the cursor on the destination and press Enter. You hear
-where the unit arrived. If an ambush or newly sighted enemies stop the move,
-that is announced; T continues the move. Shift+X before moving describes the
-route. U undoes a move, R redoes it.
+Move: there are two ways.
+- Go towards a place (easiest): put the cursor on the place you want to go
+  to, for example on an ally with Ctrl+F4, on a village with F5, on a keep
+  with K, or anywhere with the direction keys. Press Ctrl+Enter. The unit
+  moves, by the game's own rules, to the free hex it can reach this turn
+  that is closest to the cursor. You hear where it arrived and how far the
+  target still is. The cursor stays on the target, so next turn you select
+  the unit again and press Ctrl+Enter again.
+- Go to an exact hex: put the cursor on a free hex and press Enter. When a
+  unit is selected, every hex description says whether it is reachable and
+  how many moves would be left; for hexes that cannot be reached, it names
+  the closest reachable hex. F6 lists all reachable hexes.
+After moving, the unit stays selected while it has moves left. If an
+ambush or newly sighted enemies stop the move, that is announced; T
+continues the move. Shift+X describes the route before moving. U undoes a
+move, R redoes it.
 
 Attack: F7 lists every enemy the selected unit can attack, once for every
 free hex it can attack from, with the defense of that hex. Press Enter: the

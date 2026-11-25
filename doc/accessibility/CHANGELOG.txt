@@ -10,6 +10,9 @@ Changes after the first JAWS test (same version number until release)
   not on a keep, and otherwise point the game at the right castle.
 - Tutorial hint titles are separated from the hint text.
 - A move is announced before the dialogue it triggers.
+- Ctrl+Enter moves the selected unit as close as possible to the cursor;
+  hex descriptions name the closest reachable hex for unreachable places;
+  the first selection explains how to move.
 
 0.1.0 (first test version, for Battle for Wesnoth 1.18.8)
 - Speech through JAWS, NVDA or SAPI with Universal Speech, on a worker thread.

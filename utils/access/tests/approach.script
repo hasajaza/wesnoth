@@ -1,0 +1,46 @@
+# Wesnoth Access end-to-end test: moving towards a target with Ctrl+Enter.
+#ARGS: -t access_test
+
+wait-for 180000 Your turn
+wait-dialog 20000 transient_message
+key Enter
+wait 800
+
+# Ctrl+Enter without a selection explains what to do.
+mark
+key Ctrl+Enter
+expect Select one of your units first
+
+# Select the Spearman: the first selection gives a short how-to.
+key F3
+key F3
+mark
+key Enter
+expect Selected your Spearman
+expect Control Enter
+
+# The village at 4,2 is reachable: the description says so.
+mark
+key F5
+expect village
+mark
+key X
+expect reachable
+
+# The Grunt's hex is occupied: the closest reachable hex is offered.
+mark
+key F4
+key X
+expect closest reachable hex
+expect 1 away
+
+# Ctrl+Enter moves next to the Grunt with the game's own movement.
+mark
+key Ctrl+Enter
+wait-for 15000 moved to
+expect your Spearman Pike moved to
+mark
+key C
+expect 7, 4
+
+quit

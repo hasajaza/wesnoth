@@ -78,6 +78,7 @@ const command_info infos[] = {
 	{command::jump_sw,            "jump_sw",            context::map, N_("Jump south-west until something changes"), "Shift+A"},
 	{command::jump_nw,            "jump_nw",            context::map, N_("Jump north-west until something changes"), "Shift+Q"},
 	{command::select_action,      "select_action",      context::map, N_("Select the unit under the cursor, or move or attack with the selected unit"), "Enter"},
+	{command::approach,           "approach",           context::map, N_("Move the selected unit as close as possible to the cursor this turn"), "Ctrl+Enter"},
 	{command::cancel,             "cancel",             context::map, N_("Deselect the selected unit (when nothing is selected: the normal Escape menu)"), "Escape"},
 	{command::describe_tile,      "describe_tile",      context::map, N_("Describe the tile under the cursor in detail"), "X"},
 	{command::describe_route,     "describe_route",     context::map, N_("Describe the route of the selected unit to the cursor"), "Shift+X"},
