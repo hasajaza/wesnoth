@@ -58,6 +58,7 @@ Changes after the first JAWS test (same version number until release)
   started after the game is found within a few seconds; the log records the
   NVDA controller's answer, which screen readers were found, and every
   change of speech engine.
+- Unnamed fields are named from their id ("txtFilter" is read "filter").
 - Permanent download link for the newest tested build (see INSTALL.txt).
 
 0.1.0 (first test version, for Battle for Wesnoth 1.18.8)

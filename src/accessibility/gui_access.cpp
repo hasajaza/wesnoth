@@ -57,6 +57,7 @@
 #include <SDL2/SDL_timer.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <iomanip>
 #include <map>
@@ -139,18 +140,31 @@ std::string clean(const std::string& s)
 	return plain_text(s);
 }
 
-/** Converts an id like "button_new_game" into "new game". */
+/** Converts an id like "button_new_game" or "txtFilter" into "new game" / "filter". */
 std::string humanize(std::string id)
 {
-	for(const char* prefix : {"button_", "btn_", "_", "lbl_", "label_"}) {
+	for(const char* prefix : {"button_", "btn_", "_", "lbl_", "label_", "txt_", "txt"}) {
 		std::string p(prefix);
-		if(id.compare(0, p.size(), p) == 0) {
+		if(id.size() > p.size() && id.compare(0, p.size(), p) == 0) {
 			id = id.substr(p.size());
 		}
 	}
-	std::replace(id.begin(), id.end(), '_', ' ');
-	std::replace(id.begin(), id.end(), '-', ' ');
-	return id;
+	// camelCase -> separate lower-case words
+	std::string res;
+	for(std::size_t i = 0; i < id.size(); ++i) {
+		const char c = id[i];
+		if(std::isupper(static_cast<unsigned char>(c))) {
+			if(!res.empty() && res.back() != ' ') {
+				res += ' ';
+			}
+			res += static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+		} else {
+			res += c;
+		}
+	}
+	std::replace(res.begin(), res.end(), '_', ' ');
+	std::replace(res.begin(), res.end(), '-', ' ');
+	return res;
 }
 
 std::string label_of(const styled_widget& w)

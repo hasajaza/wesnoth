@@ -111,3 +111,16 @@ listed at the end of that file.
   after the engine has computed it.
 - Every new engine hook is commented "Wesnoth Access".
 - Commit messages end with the session attribution lines.
+
+## Field notes (tester feedback, November 2026)
+
+- NVDA: Universal Speech's own NVDA detection reported "not running" on the
+  tester's PC although `nvdaController_testIfRunning()` from the same
+  packaged DLL returned 0. Wesnoth Access now loads the controller client
+  itself and speaks through it directly in that case ("NVDA (direct)" in
+  the log). Confirmed working by the tester with NVDA.
+- Stray mouse clicks reach the map (seen in logs while pressing keys with a
+  screen reader running); the map ignores the mouse by default
+  (`access_map_mouse`). Before that, a click moved a selected unit.
+- After a move the game drops the selection; F7 reselects the unit under
+  the cursor.
