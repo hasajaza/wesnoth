@@ -1303,6 +1303,8 @@ void describe_unit(bool full)
 		dlg.set_single_button(true);
 		dlg.set_ok_label(_("Close"));
 		dlg.show();
+		// Keep the game's hover on the review cursor after the dialog.
+		sync_hover(g.cursor);
 		return;
 	}
 	// V: the essentials only.
@@ -1566,6 +1568,29 @@ std::string relative_position(const map_location& from, const map_location& to)
 	}
 	int d = static_cast<int>(distance_between(from, to));
 	return distance_text(d) + " " + direction_name(from.get_relative_dir(to));
+}
+
+bool block_map_mouse(const SDL_Event& event)
+{
+	if(!enabled() || prefs().map_mouse) {
+		return false;
+	}
+	switch(event.type) {
+	case SDL_MOUSEMOTION:
+	case SDL_MOUSEBUTTONDOWN:
+	case SDL_MOUSEBUTTONUP:
+	case SDL_MOUSEWHEEL:
+	case SDL_FINGERDOWN:
+	case SDL_FINGERUP:
+	case SDL_FINGERMOTION:
+	case SDL_MULTIGESTURE:
+		if(event.type == SDL_MOUSEBUTTONDOWN) {
+			debug("map mouse click ignored");
+		}
+		return true;
+	default:
+		return false;
+	}
 }
 
 bool handle_event(controller_base& controller, const SDL_Event& event)

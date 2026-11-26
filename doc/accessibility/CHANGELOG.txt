@@ -46,6 +46,9 @@ Changes after the first JAWS test (same version number until release)
   modifications menu by its name.
 - Story pages are spoken once (they were repeated).
 - Home and End jump to the first and last item of any list.
+- The game map ignores the mouse while accessibility is on (setting
+  "Mouse clicks on the game map"): a stray click moved the selected unit to
+  the mouse pointer and used up its moves.
 - Permanent download link for the newest tested build (see INSTALL.txt).
 
 0.1.0 (first test version, for Battle for Wesnoth 1.18.8)

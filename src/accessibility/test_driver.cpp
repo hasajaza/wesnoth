@@ -19,6 +19,7 @@
 #include "accessibility/keymap.hpp"
 #include "accessibility/speech.hpp"
 
+#include "display.hpp"
 #include "events.hpp"
 #include "game_data.hpp"
 #include "replay.hpp"
@@ -218,6 +219,35 @@ private:
 			}
 			push_key(code, mods, false);
 			// Give the game time to process the key and any animation.
+			next_ticks_ = SDL_GetTicks() + 400;
+		} else if(cmd == "click") {
+			// A left mouse click on the map hex "x y" (1-based, as spoken).
+			int x = 0, y = 0;
+			std::istringstream is(arg);
+			is >> x >> y;
+			display* d = display::get_singleton();
+			if(!d) {
+				fail("click: no game display");
+				return;
+			}
+			const map_location loc(x - 1, y - 1);
+			const int px = d->get_location_x(loc) + display::hex_size() / 2;
+			const int py = d->get_location_y(loc) + display::hex_size() / 2;
+			SDL_Event ev{};
+			ev.type = SDL_MOUSEMOTION;
+			ev.motion.x = px;
+			ev.motion.y = py;
+			SDL_PushEvent(&ev);
+			for(Uint32 type : {static_cast<Uint32>(SDL_MOUSEBUTTONDOWN), static_cast<Uint32>(SDL_MOUSEBUTTONUP)}) {
+				SDL_Event b{};
+				b.type = type;
+				b.button.button = SDL_BUTTON_LEFT;
+				b.button.state = type == SDL_MOUSEBUTTONDOWN ? SDL_PRESSED : SDL_RELEASED;
+				b.button.clicks = 1;
+				b.button.x = px;
+				b.button.y = py;
+				SDL_PushEvent(&b);
+			}
 			next_ticks_ = SDL_GetTicks() + 400;
 		} else if(cmd == "text") {
 			SDL_Event ev{};

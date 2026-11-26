@@ -233,6 +233,9 @@ value; Enter changes it:
 - Turn summary at the start of each turn.
 - Audio cues: short sounds for the map edge, selection, errors and new turns.
 - Debug logging (more detail in the accessibility log).
+- Mouse clicks on the game map: ignored (default) or used. While ignored, a
+  stray click (for example one sent by the screen reader) cannot move or
+  attack with the selected unit at the mouse pointer.
 - Test speech, and Turn accessibility off.
 Ctrl+Alt+A turns the accessibility layer off and on at any time.
 

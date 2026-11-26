@@ -54,6 +54,8 @@ struct settings
 	bool coordinates = true;
 	bool turn_summary = true;
 	bool audio_cues = true;
+	/** Mouse clicks and movement on the game map (off: ignored, so a stray click cannot move a unit). */
+	bool map_mouse = false;
 	bool debug_log = false;
 	/** Custom key bindings, see keymap.hpp ("command=key;command=key"). */
 	std::string key_bindings;

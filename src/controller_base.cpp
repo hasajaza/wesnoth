@@ -113,6 +113,10 @@ void controller_base::handle_event(const SDL_Event& event)
 	if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
 		accessibility::game::on_focus_gained(*this);
 	}
+	// Wesnoth Access: the map ignores the mouse unless allowed in the settings.
+	if(accessibility::game::block_map_mouse(event)) {
+		return;
+	}
 
 	events::mouse_handler_base& mh_base = get_mouse_handler_base();
 

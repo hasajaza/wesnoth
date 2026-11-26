@@ -48,6 +48,14 @@ namespace accessibility::game
  */
 bool handle_event(controller_base& controller, const SDL_Event& event);
 
+/**
+ * True if a mouse or touch event on the game map must be ignored: with the
+ * accessibility layer on, the map ignores the mouse unless the user allowed it
+ * (a stray click, for example from a screen reader, would otherwise move or
+ * attack with the selected unit at the mouse pointer).
+ */
+bool block_map_mouse(const SDL_Event& event);
+
 /** The game window regained the input focus while the map is shown. */
 void on_focus_gained(controller_base& controller);
 

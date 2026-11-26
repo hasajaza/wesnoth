@@ -95,6 +95,7 @@ void load_settings()
 	s.coordinates = preferences::get("access_coordinates", true);
 	s.turn_summary = preferences::get("access_turn_summary", true);
 	s.audio_cues = preferences::get("access_audio_cues", true);
+	s.map_mouse = preferences::get("access_map_mouse", false);
 	s.debug_log = preferences::get("access_debug_log", false);
 	s.key_bindings = preferences::get("access_key_bindings", std::string());
 }
@@ -163,6 +164,7 @@ void save_settings()
 	preferences::set("access_coordinates", s.coordinates);
 	preferences::set("access_turn_summary", s.turn_summary);
 	preferences::set("access_audio_cues", s.audio_cues);
+	preferences::set("access_map_mouse", s.map_mouse);
 	preferences::set("access_debug_log", s.debug_log);
 	preferences::set("access_key_bindings", s.key_bindings);
 	if(speech::running()) {
@@ -796,6 +798,7 @@ void show_settings_dialog()
 			_("Turn summary at the start of each turn: ") + onoff(s.turn_summary),
 			_("Audio cues: ") + onoff(s.audio_cues),
 			_("Debug logging: ") + onoff(s.debug_log),
+			_("Mouse clicks on the game map: ") + (s.map_mouse ? std::string(_("used")) : std::string(_("ignored"))),
 			_("Test speech"),
 			_("Turn accessibility off"),
 		};
@@ -838,10 +841,11 @@ void show_settings_dialog()
 		case 8: s.turn_summary = !s.turn_summary; break;
 		case 9: s.audio_cues = !s.audio_cues; break;
 		case 10: s.debug_log = !s.debug_log; break;
-		case 11:
+		case 11: s.map_mouse = !s.map_mouse; break;
+		case 12:
 			speak(_("This is a speech test. Wesnoth Access is working."), msg::reply);
 			continue;
-		case 12:
+		case 13:
 			save_settings();
 			set_enabled(false);
 			save_settings();

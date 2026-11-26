@@ -25,6 +25,12 @@ key Enter
 expect Selected your Spearman
 expect Control Enter
 
+# A stray mouse click on a reachable hex does not move the selected unit
+# (the map ignores the mouse while accessibility is on).
+never moved to 5, 5
+click 5 5
+wait 1500
+
 # The village at 4,2 is reachable: the description says so.
 mark
 key F5
