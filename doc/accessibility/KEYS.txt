@@ -26,7 +26,7 @@ Tab                Next control
 Shift+Tab          Previous control
 Up and Down        Move in lists, tree views and menu buttons; read long text sentence by sentence
 Left and Right     Change sliders; open and close tree branches
-Home and End       First and last item, or start and end of a text
+Home and End       First and last item of a list, or start and end of a text
 Page Up, Page Down Scroll long lists
 Enter              Press the focused button; in lists usually confirms the dialog (OK)
 Space              Press the focused button or toggle the focused check box;
@@ -71,10 +71,12 @@ C                  Cursor coordinates, distance and direction from the selected 
 Shift+C            Scenario name and map size
 X                  Full description of the tile under the cursor
 Shift+X            Route of the selected unit to the cursor: length, turns, cost and directions
-V                  Unit under the cursor: type, name, side, level, hit points,
-                   experience, moves, attacks, alignment, traits, abilities, weapons
-Shift+V            Everything in V plus weapon specials, resistances, advancement,
-                   movement costs, terrain defense and vision
+V                  Unit under the cursor, short: name, hit points, moves, level,
+                   alignment, defense here and weapons
+Shift+V            All details of the unit as a list: Up and Down read one line
+                   at a time (traits, abilities, every weapon and special,
+                   resistances, defense and move cost on each terrain type...);
+                   Escape closes it
 Z                  The six tiles around the cursor
 Shift+Z            Danger check: which visible enemies could attack the tile under
                    the cursor on their next turn (like the game's "show enemy moves")

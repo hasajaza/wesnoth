@@ -25,6 +25,8 @@
 #include "game_display.hpp"
 #include "gettext.hpp"
 #include "gui/dialogs/edit_text.hpp"
+#include "gui/dialogs/simple_item_selector.hpp"
+#include "language.hpp"
 #include "map/label.hpp"
 #include "map/map.hpp"
 #include "menu_events.hpp"
@@ -40,6 +42,7 @@
 #include "units/map.hpp"
 #include "units/unit.hpp"
 #include "units/types.hpp"
+#include "utils/math.hpp"
 #include "utils/general.hpp"
 
 #include <SDL2/SDL_events.h>
@@ -1158,6 +1161,127 @@ void describe_route()
 	speak(join(parts, ". "), msg::reply);
 }
 
+/** One weapon of a unit with the values the game's sidebar shows (time of day, leadership, slow). */
+struct weapon_line
+{
+	std::string summary;                  /**< "staff, melee, impact: 3 strikes of 4 damage" */
+	std::string specials;                 /**< "magical" */
+	std::vector<std::string> special_help; /**< "magical: This attack always has..." */
+};
+
+std::vector<weapon_line> weapon_lines(const unit& u)
+{
+	std::vector<weapon_line> res;
+	const map_location& loc = u.get_location();
+	for(const attack_type& at : u.attacks()) {
+		weapon_line w;
+		auto ctx = at.specials_context(u.shared_from_this(), loc, u.side() == disp().playing_side());
+		int mult = 100 + combat_modifier(board().units(), gmap(), loc, u.alignment(), u.is_fearless());
+		mult += under_leadership(u, loc, at.shared_from_this());
+		const bool slowed = u.get_state(unit::STATE_SLOWED);
+		const int damage = round_damage(at.modified_damage(), mult * 100, slowed ? 20000 : 10000);
+		unsigned min_blows = 0, max_blows = 0;
+		at.modified_attacks(min_blows, max_blows);
+		const unsigned hp = static_cast<unsigned>(std::max(0, std::min(u.hitpoints(), u.max_hitpoints())));
+		const unsigned blows = swarm_blows(min_blows, max_blows, hp, static_cast<unsigned>(u.max_hitpoints()));
+		const std::string range = plain_text(string_table["range_" + at.range()]);
+		const std::string type = plain_text(string_table["type_" + at.type()]);
+		w.summary = plain_text(at.name()) + ", " + range + ", " + type + ": " + std::to_string(blows) + " "
+			+ (blows == 1 ? _("strike") : _("strikes")) + " " + _("of") + " " + std::to_string(damage) + " " + _("damage");
+		w.specials = plain_text(at.weapon_specials());
+		for(const auto& sp : at.special_tooltips()) {
+			w.special_help.push_back(plain_text(sp.first) + ": " + plain_text(sp.second));
+		}
+		res.push_back(w);
+	}
+	return res;
+}
+
+std::string alignment_explained(const unit& u)
+{
+	std::string name = report("unit_alignment").text;
+	if(std::size_t br = name.find(" ("); br != std::string::npos) {
+		name = name.substr(0, br);
+	}
+	const int now = combat_modifier(board().units(), gmap(), u.get_location(), u.alignment(), u.is_fearless());
+	std::string why;
+	switch(u.alignment()) {
+	case unit_alignments::type::lawful: why = _("stronger by day, weaker at night"); break;
+	case unit_alignments::type::chaotic: why = _("stronger at night, weaker by day"); break;
+	case unit_alignments::type::neutral: why = _("not affected by day and night"); break;
+	case unit_alignments::type::liminal: why = _("strongest at dusk and dawn"); break;
+	}
+	return _("alignment") + std::string(" ") + name + ", " + why + ", " + _("now") + " " + (now > 0 ? "+" : "")
+		+ std::to_string(now) + "% " + _("damage");
+}
+
+/** Every detail of a unit, one line each, for the Shift+V list. */
+std::vector<std::string> unit_detail_lines(const unit& u)
+{
+	std::vector<std::string> lines;
+	lines.push_back(unit_title(u) + ", " + side_label(u.side()));
+	lines.push_back(_("level") + std::string(" ") + std::to_string(u.level()) + ", " + plain_text(u.type_name()));
+	lines.push_back(hp_text(u));
+	lines.push_back(_("experience") + std::string(" ") + std::to_string(u.experience()) + " " + _("of") + " "
+		+ std::to_string(u.max_experience()));
+	report_result adv = report("unit_advancement_options");
+	if(!adv.text.empty()) {
+		lines.push_back(_("advances to") + std::string(": ") + adv.text);
+	}
+	lines.push_back(std::to_string(u.movement_left()) + " " + _("of") + " " + std::to_string(u.total_movement()) + " "
+		+ _("moves") + ", " + std::to_string(u.attacks_left()) + " " + _("of") + " " + std::to_string(u.max_attacks()) + " "
+		+ _("attacks left"));
+	for(const std::string& st : status_list(u)) {
+		lines.push_back(st);
+	}
+	lines.push_back(alignment_explained(u));
+	for(const config& tr : u.get_modifications().child_range("trait")) {
+		std::string name = plain_text(tr["name"].str());
+		std::string desc = plain_text(tr["description"].str());
+		if(!name.empty()) {
+			lines.push_back(_("trait") + std::string(" ") + name + (desc.empty() ? "" : ": " + desc));
+		}
+	}
+	for(const auto& ab : u.ability_tooltips()) {
+		lines.push_back(_("ability") + std::string(" ") + plain_text(std::get<2>(ab)) + ": " + plain_text(std::get<3>(ab)));
+	}
+	const t_translation::terrain_code here = gmap().get_terrain(u.get_location());
+	lines.push_back(std::to_string(100 - u.defense_modifier(here)) + "% " + _("defense on") + " " + terrain_name(u.get_location()));
+	for(const weapon_line& w : weapon_lines(u)) {
+		lines.push_back(_("weapon") + std::string(" ") + w.summary
+			+ (w.specials.empty() ? std::string() : ", " + std::string(_("specials")) + " " + w.specials));
+		for(const std::string& h : w.special_help) {
+			lines.push_back(h);
+		}
+	}
+	std::vector<std::string> res;
+	for(const char* t : {"blade", "pierce", "impact", "fire", "cold", "arcane"}) {
+		const int r = 100 - u.resistance_against(t, false, u.get_location());
+		res.push_back(plain_text(string_table[std::string("type_") + t]) + " " + (r > 0 ? "+" : "") + std::to_string(r) + "%");
+	}
+	lines.push_back(_("resistances") + std::string(": ") + join(res));
+	// Defense and movement cost on the main terrain types, like the help's terrain table.
+	static const char* const terrains[] {
+		// The movement alias types: Castle, Village, Flat, Forest, Hills, Mountains, Shallow Water,
+		// Deep Water, Coastal Reef, Swamp, Sand, Cave, Fungus, Frozen.
+		"Ct", "Vt", "Gt", "Ft", "Ht", "Mt", "Wst", "Wdt", "Wrt", "St", "Dt", "Ut", "Tt", "At",
+	};
+	for(const char* code : terrains) {
+		const t_translation::terrain_code tc = t_translation::read_terrain_code(code);
+		const terrain_type& info = gmap().tdata()->get_terrain_info(tc);
+		const int cost = u.movement_cost(tc);
+		const std::string cost_text = cost >= movetype::UNREACHABLE ? std::string(_("impassable"))
+			: _("move cost") + std::string(" ") + std::to_string(cost);
+		lines.push_back(plain_text(info.name()) + ": " + _("defense") + " "
+			+ std::to_string(100 - u.defense_modifier(tc)) + "%, " + cost_text);
+	}
+	if(u.vision() != u.total_movement()) {
+		lines.push_back(_("vision") + std::string(" ") + std::to_string(u.vision()));
+	}
+	lines.push_back(coords(u.get_location()));
+	return lines;
+}
+
 void describe_unit(bool full)
 {
 	const unit* u = visible_unit(g.cursor);
@@ -1171,48 +1295,38 @@ void describe_unit(bool full)
 		speak(unit_brief(*u), msg::reply);
 		return;
 	}
+	if(full) {
+		// Too much for one announcement: a list read with the arrow keys.
+		std::vector<std::string> lines = unit_detail_lines(*u);
+		gui2::dialogs::simple_item_selector dlg(_("Unit details"),
+			_("Up and Down read the details one line at a time. Escape closes."), lines);
+		dlg.set_single_button(true);
+		dlg.set_ok_label(_("Close"));
+		dlg.show();
+		return;
+	}
+	// V: the essentials only.
 	std::vector<std::string> parts;
 	parts.push_back(unit_title(*u));
-	parts.push_back(side_label(u->side()));
-	parts.push_back(_("level") + std::string(" ") + std::to_string(u->level()));
 	parts.push_back(hp_text(*u));
-	parts.push_back(_("experience") + std::string(" ") + std::to_string(u->experience()) + " " + _("of") + " " + std::to_string(u->max_experience()));
 	parts.push_back(std::to_string(u->movement_left()) + " " + _("of") + " " + std::to_string(u->total_movement()) + " " + _("moves"));
-	parts.push_back(std::to_string(u->attacks_left()) + " " + _("of") + " " + std::to_string(u->max_attacks()) + " " + _("attacks left"));
+	if(u->attacks_left() == 0) {
+		parts.push_back(_("no attack left"));
+	}
 	auto st = status_list(*u);
 	parts.insert(parts.end(), st.begin(), st.end());
 	report_result align = report("unit_alignment");
-	parts.push_back(_("alignment") + std::string(" ") + align.text);
-	report_result traits = report("unit_traits");
-	if(!traits.text.empty()) {
-		parts.push_back(_("traits") + std::string(": ") + traits.text);
-	}
-	report_result abil = report("unit_abilities");
-	if(!abil.text.empty()) {
-		parts.push_back(_("abilities") + std::string(": ") + abil.text);
-	}
+	parts.push_back(_("level") + std::string(" ") + std::to_string(u->level()) + ", " + align.text);
 	const t_translation::terrain_code terrain = gmap().get_terrain(u->get_location());
-	parts.push_back(std::to_string(100 - u->defense_modifier(terrain)) + "% " + _("defense on") + " " + terrain_name(u->get_location()));
-	// Weapons with the effective (time of day, leadership...) values of the native sidebar.
-	report_result weapons = report("unit_weapons");
-	parts.push_back(_("attacks") + std::string(": ") + weapons.text);
-	if(full) {
-		if(!align.tooltip.empty()) parts.push_back(align.tooltip);
-		if(!traits.tooltip.empty()) parts.push_back(traits.tooltip);
-		if(!abil.tooltip.empty()) parts.push_back(abil.tooltip);
-		if(!weapons.tooltip.empty()) parts.push_back(weapons.tooltip);
-		report_result hp = report("unit_hp");
-		if(!hp.tooltip.empty()) parts.push_back(hp.tooltip); // resistances
-		report_result adv = report("unit_advancement_options");
-		if(!adv.text.empty()) parts.push_back(_("advances to") + std::string(": ") + adv.text);
-		report_result moves = report("unit_moves");
-		if(!moves.tooltip.empty()) parts.push_back(moves.tooltip); // movement costs
-		report_result def = report("unit_defense");
-		if(!def.tooltip.empty()) parts.push_back(def.tooltip);
-		report_result vision = report("unit_vision");
-		if(!vision.tooltip.empty()) parts.push_back(vision.tooltip);
+	parts.push_back(std::to_string(100 - u->defense_modifier(terrain)) + "% " + _("defense"));
+	std::vector<std::string> weapons;
+	for(const weapon_line& w : weapon_lines(*u)) {
+		weapons.push_back(w.summary + (w.specials.empty() ? std::string() : ", " + w.specials));
 	}
-	parts.push_back(coords(u->get_location()));
+	if(!weapons.empty()) {
+		parts.push_back(_("weapons") + std::string(": ") + join(weapons, "; "));
+	}
+	parts.push_back(_("Shift V lists all details"));
 	speak(join(parts, ". "), msg::reply);
 }
 

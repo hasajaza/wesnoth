@@ -40,6 +40,12 @@ Changes after the first JAWS test (same version number until release)
 - The game's quit question starts on "No"; Tab reaches "Yes".
 - Shift+Z: which visible enemies could attack the tile under the cursor
   on their next turn.
+- Shift+V opens the unit's details as a list read line by line (Escape
+  closes); V gives a short summary with the weapons.
+- Campaign list: "Name" and "Timeline" are announced as sort buttons, the
+  modifications menu by its name.
+- Story pages are spoken once (they were repeated).
+- Home and End jump to the first and last item of any list.
 - Permanent download link for the newest tested build (see INSTALL.txt).
 
 0.1.0 (first test version, for Battle for Wesnoth 1.18.8)

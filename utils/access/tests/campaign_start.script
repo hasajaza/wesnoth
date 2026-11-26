@@ -15,6 +15,12 @@ mark
 key Down
 expect A Tale of Two Brothers
 expect An evil mage
+# The sort toggles are named as sort buttons and the modifications menu by
+# its label, not by its value.
+mark
+key F4
+expect Name, sort button
+expect Modifications, multi select menu
 
 # Enter starts the selected campaign.
 mark
@@ -30,6 +36,8 @@ mark
 key Enter
 wait 3000
 expect dark mage
+# The new page is spoken once, not twice.
+expect-once settled in the region
 # F11 repeats the last story text from the dialogue history.
 mark
 key F11

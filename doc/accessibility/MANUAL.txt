@@ -99,8 +99,9 @@ village or label is reached. Home goes to the selected unit, Shift+Home to
 your leader, Backspace back to the previous location, Ctrl+G to typed
 coordinates, 1 to 9 to bookmarks (set with Ctrl+1 to Ctrl+9).
 
-Useful information keys: X (full tile), V and Shift+V (unit details,
-including weapons with the current damage, resistances and advancement),
+Useful information keys: X (full tile), V (the unit under the cursor in
+short), Shift+V (all its details in a list: Up and Down read one line at a
+time, Escape closes),
 Z (the six neighbours), Shift+Z (which visible enemies could attack the
 tile under the cursor next turn: check this before ending a unit's move
 there), C (coordinates and distances), F8 (objectives),

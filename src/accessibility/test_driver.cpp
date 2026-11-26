@@ -239,6 +239,19 @@ private:
 			} else {
 				fail("expect-not \"" + arg + "\" (spoken since mark: " + since_mark() + ")");
 			}
+		} else if(cmd == "expect-once") {
+			// The text is spoken exactly once since the mark (no repetition).
+			const std::string hay = lower(since_mark());
+			const std::string needle = lower(arg);
+			std::size_t count = 0;
+			for(std::size_t pos = hay.find(needle); !needle.empty() && pos != std::string::npos; pos = hay.find(needle, pos + 1)) {
+				++count;
+			}
+			if(count == 1) {
+				pass("expect-once \"" + arg + "\"");
+			} else {
+				fail("expect-once \"" + arg + "\" found " + std::to_string(count) + " times (spoken since mark: " + since_mark() + ")");
+			}
 		} else if(cmd == "never") {
 			never_.push_back(lower(arg));
 			for(const std::string& t : all_) {

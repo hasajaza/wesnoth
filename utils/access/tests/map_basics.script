@@ -97,11 +97,30 @@ mark
 key V
 expect enemy Orcish Grunt
 expect hit points
-expect attacks
+expect weapons: sword, melee, blade
+expect strikes of
+expect Shift V lists all details
 
+# Shift+V: every detail as a list read line by line; Escape closes it.
 mark
 key Shift+V
-expect resistance
+wait-dialog 10000 simple_item_selector
+expect Unit details
+expect enemy Orcish Grunt
+mark
+key Down
+expect level 1
+mark
+key End
+expect 7, 4
+mark
+key F4
+expect resistances
+expect weapon sword
+expect Forest: defense
+expect alignment chaotic
+key Escape
+wait 800
 
 mark
 key X

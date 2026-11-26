@@ -673,6 +673,13 @@ void collect_grid(grid& g, collection& c, std::string& pending_label)
 
 void add_control(collection& c, widget& w, role r, std::string& pending_label)
 {
+	// Three-state toggles named sort_* (campaign list "Name" and "Timeline")
+	// are sort buttons, not check boxes.
+	if(r == role::check && w.id().compare(0, 5, "sort_") == 0) {
+		if(auto* t = dynamic_cast<toggle_button*>(&w); t && t->num_states() == 3) {
+			r = role::sort_header;
+		}
+	}
 	c.controls.push_back({&w, r, pending_label});
 	pending_label.clear();
 }
@@ -870,7 +877,7 @@ std::string role_name(role r)
 	case role::list: return _("list");
 	case role::tree: return _("tree view");
 	case role::long_text: return _("text");
-	case role::sort_header: return _("sort column");
+	case role::sort_header: return _("sort button");
 	}
 	return std::string();
 }
@@ -883,6 +890,10 @@ std::string control_name(const focusable& f)
 		if(labelled) {
 			name = label_of(*sw);
 		}
+	}
+	if(f.r == role::multimenu && !f.label_hint.empty()) {
+		// Its caption shows the selection ("None"); the label before it names it ("Modifications").
+		name.clear();
 	}
 	if(f.r == role::toggle_panel) {
 		name = row_text(static_cast<toggle_panel*>(f.w)->get_grid());
@@ -941,7 +952,8 @@ std::string control_value(const focusable& f, bool for_snapshot)
 	}
 	case role::multimenu: {
 		auto* m = static_cast<multimenu_button*>(f.w);
-		return std::to_string(m->get_toggle_states().count()) + " " + _("selected");
+		std::string v = f.label_hint.empty() ? std::string() : clean(m->get_label().str());
+		return join({v, std::to_string(m->get_toggle_states().count()) + " " + _("selected")});
 	}
 	case role::slider: {
 		auto* s = static_cast<slider*>(f.w);
@@ -1495,14 +1507,11 @@ void announce_changes(window& win, window_state& st, bool from_key)
 			}
 			std::string v = control_value(f, false);
 			if(f.w != st.focus) {
-				const std::string name = control_name(f);
-				if(!name.empty()) {
-					v = name + ", " + v;
-				}
+				v = join({control_name(f), v});
 			}
-			if(!control_active(f)) {
-				v += ", " + std::string(_("unavailable"));
-			}
+			// A button only changes by becoming available or unavailable.
+			v = join({v, control_active(f) ? (control_value(f, false).empty() ? std::string(_("available")) : std::string())
+											: std::string(_("unavailable"))});
 			said.push_back(v);
 		}
 	}
@@ -1519,7 +1528,10 @@ void announce_changes(window& win, window_state& st, bool from_key)
 		if(old == st.content.end() && !from_key && st.announced) {
 			// A content text that just appeared (e.g. story text fading in).
 		}
-		said.push_back(t.text);
+		// The same text may already have been said as a focused long text.
+		if(std::find(said.begin(), said.end(), t.text) == said.end()) {
+			said.push_back(t.text);
+		}
 		if(win.id() == "story_viewer") {
 			std::string speaker;
 			if(label* tl = find_widget<label>(&win, "title", false, false)) {
@@ -1772,6 +1784,32 @@ bool key_before(window& win, const SDL_Event& event)
 		}
 		st.review_pos = pos;
 		speak(st.review_lines[pos], msg::nav);
+		return true;
+	}
+
+	if(f.r == role::list && plain && (key == SDLK_HOME || key == SDLK_END)) {
+		// First / last item of a list (GUI2 lists have no Home/End keys of their own).
+		auto* l = static_cast<listbox*>(f.w);
+		generator_base* gen = list_generator(*l);
+		const unsigned n = l->get_item_count();
+		int target = -1;
+		for(unsigned ordered = 0; ordered < n; ++ordered) {
+			unsigned idx = gen ? gen->get_item_at_ordered(ordered) : ordered;
+			if(idx >= n || (gen && !gen->get_item_shown(idx))) {
+				continue;
+			}
+			if(key == SDLK_END || target < 0) {
+				target = static_cast<int>(idx);
+			}
+		}
+		if(target >= 0) {
+			if(target == l->get_selected_row()) {
+				cue("edge");
+			}
+			l->select_row(target);
+			l->fire(event::NOTIFY_MODIFIED, *l, nullptr);
+		}
+		announce_changes(win, st, true);
 		return true;
 	}
 
