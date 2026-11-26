@@ -809,6 +809,18 @@ std::string explain_no_targets()
 
 void cycle_list(list_kind kind, int direction)
 {
+	if(kind == L_TARGETS) {
+		// The game drops the selection after a move; F7 on (or right after
+		// moving) one of your units selects it again, so it can attack.
+		const unit* sel = selected_unit();
+		const unit* here = visible_unit(g.cursor);
+		if((!sel || sel->side() != viewing_side()) && here && here->side() == viewing_side() && here->attacks_left() > 0
+			&& !g.pc->is_browsing()) {
+			events::mouse_handler& mh = mouse();
+			mh.access_hover(g.cursor, false);
+			mh.select_or_action(false);
+		}
+	}
 	std::vector<list_entry> items = build_list(kind);
 	if(items.empty()) {
 		if(kind == L_TARGETS) {
@@ -1235,12 +1247,15 @@ std::vector<std::string> unit_detail_lines(const unit& u)
 		lines.push_back(st);
 	}
 	lines.push_back(alignment_explained(u));
-	for(const config& tr : u.get_modifications().child_range("trait")) {
-		std::string name = plain_text(tr["name"].str());
-		std::string desc = plain_text(tr["description"].str());
-		if(!name.empty()) {
-			lines.push_back(_("trait") + std::string(" ") + name + (desc.empty() ? "" : ": " + desc));
-		}
+	const std::vector<t_string>& trait_names = u.trait_names();
+	const std::vector<t_string>& trait_desc = u.trait_descriptions();
+	if(trait_names.empty()) {
+		lines.push_back(_("no traits"));
+	}
+	for(std::size_t i = 0; i < trait_names.size(); ++i) {
+		const std::string name = plain_text(trait_names[i]);
+		const std::string desc = i < trait_desc.size() ? plain_text(trait_desc[i]) : std::string();
+		lines.push_back(_("trait") + std::string(" ") + name + (desc.empty() ? "" : ": " + desc));
 	}
 	for(const auto& ab : u.ability_tooltips()) {
 		lines.push_back(_("ability") + std::string(" ") + plain_text(std::get<2>(ab)) + ": " + plain_text(std::get<3>(ab)));
@@ -1320,6 +1335,13 @@ void describe_unit(bool full)
 	parts.insert(parts.end(), st.begin(), st.end());
 	report_result align = report("unit_alignment");
 	parts.push_back(_("level") + std::string(" ") + std::to_string(u->level()) + ", " + align.text);
+	if(!u->trait_names().empty()) {
+		std::vector<std::string> tn;
+		for(const t_string& t : u->trait_names()) {
+			tn.push_back(plain_text(t));
+		}
+		parts.push_back(_("traits") + std::string(" ") + join(tn));
+	}
 	const t_translation::terrain_code terrain = gmap().get_terrain(u->get_location());
 	parts.push_back(std::to_string(100 - u->defense_modifier(terrain)) + "% " + _("defense"));
 	std::vector<std::string> weapons;

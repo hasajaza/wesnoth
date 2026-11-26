@@ -100,6 +100,7 @@ expect hit points
 expect weapons: sword, melee, blade
 expect strikes of
 expect Shift V lists all details
+expect traits intelligent
 
 # Shift+V: every detail as a list read line by line; Escape closes it.
 mark
@@ -119,6 +120,7 @@ expect resistances
 expect weapon sword
 expect Forest: defense
 expect alignment chaotic
+expect trait intelligent
 key Escape
 wait 800
 

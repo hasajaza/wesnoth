@@ -146,6 +146,10 @@ brings the unit next to the enemy, you hear "Next to ..." and Enter opens
 the attack dialog. When F7 finds nothing, it says why: no unit selected,
 already attacked, or no enemy within reach, with the nearest enemy.
 
+F7 also works right after a move: the game drops the selection after a
+move, so F7 selects the unit under the cursor again (after a move the cursor
+is on the unit).
+
 Attack: F7 lists every enemy the selected unit can attack, once for every
 free hex it can attack from, with the defense of that hex. Press Enter: the
 game's attack dialog opens. You hear who attacks whom, then the selected

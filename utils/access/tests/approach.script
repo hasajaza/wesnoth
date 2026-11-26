@@ -11,7 +11,8 @@ mark
 key Ctrl+Enter
 expect Select one of your units first
 
-# F7 without a selection explains what to do.
+# F7 without a selection (cursor on an empty hex) explains what to do.
+key W
 mark
 key F7
 expect No attack options
@@ -62,5 +63,16 @@ wait-dialog 15000 unit_attack
 expect Chance to kill
 key Escape
 wait 1000
+
+# Without a selection, F7 on one of your units selects it and lists its targets.
+mark
+key Escape
+expect Selection cleared
+key F3
+key F3
+mark
+key F7
+expect Selected your Spearman
+expect Press Enter to open the attack dialog
 
 quit

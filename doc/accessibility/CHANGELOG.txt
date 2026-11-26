@@ -49,6 +49,10 @@ Changes after the first JAWS test (same version number until release)
 - The game map ignores the mouse while accessibility is on (setting
   "Mouse clicks on the game map"): a stray click moved the selected unit to
   the mouse pointer and used up its moves.
+- Shift+V lists the unit's traits with their effects (they were missing);
+  V names the traits.
+- F7 on one of your units (or right after moving it) selects it and lists
+  its targets; the game drops the selection after a move.
 - Permanent download link for the newest tested build (see INSTALL.txt).
 
 0.1.0 (first test version, for Battle for Wesnoth 1.18.8)
