@@ -16,6 +16,12 @@ Start here:
 Quick start: run Install.cmd, then start the "Wesnoth Access" shortcut.
 Press F2 in the game for the command list, Shift+F2 for settings.
 
+Reporting problems and ideas:
+  Describe what you did, what you heard and what you expected, and attach
+  the log file Documents\My Games\Wesnoth1.18\logs\wesnoth-access.log
+  (it contains what was spoken and which dialogs were open; no passwords).
+  Also say which screen reader and version you use.
+
 Wesnoth Access is free software under the GNU General Public License,
 version 2 or later, like Battle for Wesnoth. Source code:
 https://github.com/hasajaza/wesnoth (branch wesnoth-access).

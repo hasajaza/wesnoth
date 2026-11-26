@@ -9,8 +9,9 @@ WHAT YOU NEED
 - Windows 10 or Windows 11, 64-bit.
 - JAWS or NVDA. Without a running screen reader, Windows' own SAPI voice is used.
 - Battle for Wesnoth @GAME_VERSION@ already installed (the normal Windows
-  installer from wesnoth.org or the Steam version), when you use the small
-  "overlay" package. The "standalone" package contains the whole game and
+  installer from https://www.wesnoth.org/ , Download, Windows; or the Steam
+  version), when you use the small "overlay" package. The version must be
+  exactly @GAME_VERSION@. The "standalone" package contains the whole game and
   needs no other installation.
 - About 120 MB of free disk space for the overlay package (about 45 MB
   download), or about 1 GB for the standalone package.

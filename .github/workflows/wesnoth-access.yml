@@ -269,12 +269,15 @@ jobs:
           cp "$overlay" WesnothAccess-win64-overlay.zip
           sha256sum WesnothAccess-win64-overlay.zip > WesnothAccess-win64-overlay.zip.sha256
           built="$(date -u '+%Y-%m-%d %H:%M UTC')"
-          notes="Latest tested build of Wesnoth Access for Battle for Wesnoth 1.18.8 (Windows 64-bit).
+          notes="Wesnoth Access: Battle for Wesnoth 1.18.8 playable with a keyboard and a screen reader (JAWS, NVDA or SAPI). Latest tested build, Windows 64-bit.
 
           Download: https://github.com/${GH_REPO}/releases/download/access-latest/WesnothAccess-win64-overlay.zip
 
-          Built ${built} from commit ${GITHUB_SHA} ($(basename "$overlay")).
-          Unpack the zip anywhere and run Install.cmd. See INSTALL.txt in the zip."
+          Needs Battle for Wesnoth 1.18.8 installed (https://www.wesnoth.org/ or Steam). Unpack the zip anywhere and run Install.cmd, then start the Wesnoth Access shortcut. In the game, F2 lists all keys. Documentation: README.txt and the docs folder in the zip.
+
+          Problems and ideas: please include the log file Documents\\My Games\\Wesnoth1.18\\logs\\wesnoth-access.log.
+
+          Built ${built} from commit ${GITHUB_SHA} ($(basename "$overlay"))."
           if ! gh release view access-latest > /dev/null 2>&1; then
             gh release create access-latest --title "Wesnoth Access - latest test build" --notes "$notes" --target "$GITHUB_SHA"
           fi

@@ -1,0 +1,86 @@
+TITLE:
+Wesnoth Access: Battle for Wesnoth playable with JAWS and NVDA (test version, testers wanted)
+
+POST:
+Hi everyone,
+
+I would like to share a project I have been testing: Wesnoth Access, a
+version of Battle for Wesnoth 1.18.8 that blind players can play with the
+keyboard and a screen reader. Battle for Wesnoth is a free, open source,
+turn-based strategy game on a hex map with a fantasy setting: campaigns
+with a story, recruiting units, villages, day and night, and units that
+gain experience and level up.
+
+The accessibility is built into the game itself. It does not change the
+rules: moves, attacks and recruiting go through the game's own code, and
+you only hear what a sighted player could see (fog of war and hidden units
+stay hidden).
+
+What works
+- Speech through JAWS or NVDA, or the Windows SAPI voice if no screen reader
+  is running.
+- All menus and dialogs with Tab, the arrow keys, Enter and Escape; F4 reads
+  the whole dialog.
+- Story, character dialogue and tutorial hints are read automatically;
+  F11 repeats them.
+- A review cursor on the hex map: W, E, D, S, A and Q move in the six
+  directions, and every hex is described (terrain, units, villages, defense,
+  whether your selected unit can reach it).
+- Lists that jump to your units, enemies, allies, villages, keeps, reachable
+  hexes and attack targets.
+- Select, move, attack and recruit. Ctrl+Enter moves the selected unit as
+  close as possible to the cursor. The attack dialog reads each weapon as a
+  sentence with the chance to kill and the expected hit points, and every
+  strike of a fight is announced.
+- V describes a unit; Shift+V opens all its details as a list you read with
+  the arrow keys. Shift+Z tells which visible enemies could attack a hex
+  next turn.
+- Turn summaries (gold, income, villages, time of day), enemy turn
+  announcements, healing, level ups.
+- F2 lists all keys at any time; Shift+F2 opens the accessibility settings.
+
+So far I have played the two tutorial scenarios and the start of the
+campaign "A Tale of Two Brothers" with JAWS and NVDA on Windows 11. Other
+campaigns, multiplayer and the map editor have hardly been tried, so expect
+rough edges.
+
+What you need
+- Windows 10 or 11, 64-bit.
+- Battle for Wesnoth 1.18.8 installed. The normal Windows installer from
+  https://www.wesnoth.org/ works, and so does the Steam version. It must be
+  exactly version 1.18.8.
+- JAWS or NVDA (optional; SAPI is used otherwise).
+
+Download (about 45 MB, always the latest tested build):
+https://github.com/hasajaza/wesnoth/releases/download/access-latest/WesnothAccess-win64-overlay.zip
+
+Installing
+1. Extract the zip file, for example into your Documents folder.
+2. Open the WesnothAccess folder and run Install.cmd. It finds your
+   Wesnoth 1.18.8 installation and creates a "Wesnoth Access" shortcut on
+   the desktop and in the Start menu. Your original Wesnoth installation is
+   not changed.
+3. Start the game with the Wesnoth Access shortcut. You should hear
+   "Wesnoth Access ready. Press F2 for help."
+To remove it, run Uninstall.cmd and delete the folder.
+
+The docs folder has a manual (MANUAL.txt) and the full key list
+(KEYS.txt). I suggest starting with Campaigns, Battle Training (the
+tutorial).
+
+Feedback
+Please reply here with bugs, confusing messages and suggestions. It helps
+a lot if you:
+- say which screen reader and version you use,
+- describe what you did, what you heard and what you expected,
+- attach or paste the log file:
+  Documents\My Games\Wesnoth1.18\logs\wesnoth-access.log
+  It records what was spoken and which dialogs were open, and nothing
+  personal like passwords. When you start the game again, the previous log
+  is kept as wesnoth-access.log.old, so copy it soon after the problem.
+
+Wesnoth Access is free software under the GNU GPL, like Battle for
+Wesnoth. The source code is at https://github.com/hasajaza/wesnoth (branch
+wesnoth-access).
+
+Thanks for testing, and have fun!
