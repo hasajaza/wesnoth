@@ -18,6 +18,10 @@ main menu is announced with the focused button, normally "Campaigns".
 
 Speech goes to the screen reader that is running (JAWS or NVDA). If none is
 running, the Windows SAPI voice is used. Press Control to stop speech.
+A screen reader started after the game is found within a few seconds. If
+you hear the Windows voice although NVDA is running, check the log (see
+PROBLEMS): the line starting with "speech backend" says which screen readers were found and what
+NVDA answered.
 
 The game runs in full screen. If you prefer a window, add --windowed to the
 shortcut or use Preferences, Display. With Alt+Tab you can leave and return;

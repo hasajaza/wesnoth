@@ -53,6 +53,11 @@ Changes after the first JAWS test (same version number until release)
   V names the traits.
 - F7 on one of your units (or right after moving it) selects it and lists
   its targets; the game drops the selection after a move.
+- NVDA: if Universal Speech does not detect NVDA, the game asks NVDA
+  directly (NVDA controller client) and speaks through it; a screen reader
+  started after the game is found within a few seconds; the log records the
+  NVDA controller's answer, which screen readers were found, and every
+  change of speech engine.
 - Permanent download link for the newest tested build (see INSTALL.txt).
 
 0.1.0 (first test version, for Battle for Wesnoth 1.18.8)

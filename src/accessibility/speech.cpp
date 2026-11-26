@@ -64,6 +64,8 @@ public:
 	virtual void configure(bool /*sapi_fallback*/, const std::string& /*engine*/) {}
 	/** Called periodically when idle so engines can refresh detection. */
 	virtual std::string current_engine() { return std::string(); }
+	/** Details for the log (engine availability, NVDA controller status). */
+	virtual std::string diagnostics() { return std::string(); }
 	virtual std::vector<std::string> engines() { return {}; }
 };
 
@@ -176,6 +178,7 @@ public:
 			lib_ = nullptr;
 			return;
 		}
+		load_nvda(dir);
 		configure(sapi_fallback, engine);
 	}
 
@@ -186,6 +189,9 @@ public:
 				stop_();
 			}
 			FreeLibrary(lib_);
+		}
+		if(nvda_lib_) {
+			FreeLibrary(nvda_lib_);
 		}
 		if(com_ok_) {
 			CoUninitialize();
@@ -242,12 +248,18 @@ public:
 	/**
 	 * Universal Speech lists Narrator as an engine, but its driver cannot
 	 * speak. If it got selected automatically, use SAPI instead so the user
-	 * still hears something.
+	 * still hears something. In automatic mode the choice is made again
+	 * every few seconds, so a screen reader started after the game is found.
 	 */
 	void avoid_silent_engines()
 	{
 		if(forced_ >= 0) {
 			return;
+		}
+		const DWORD now = GetTickCount();
+		if(now - last_detect_ >= 5000) {
+			last_detect_ = now;
+			setv_(SP_ENGINE, -1); // automatic detection again
 		}
 		int cur = getv_(SP_ENGINE);
 		auto list = engines();
@@ -255,9 +267,78 @@ public:
 			int sapi = engine_index("sapi");
 			if(sapi >= 0 && sapi_fallback_) {
 				setv_(SP_ENGINE, sapi);
-				// Return to automatic detection on the next configure().
 			}
 		}
+	}
+
+	/** Loads the NVDA controller client next to the game, to talk to NVDA directly when needed. */
+	void load_nvda(const std::wstring& dir)
+	{
+		nvda_lib_ = LoadLibraryW((dir + L"nvdaControllerClient.dll").c_str());
+		if(!nvda_lib_) {
+			nvda_note_ = "nvdaControllerClient.dll could not be loaded (error " + std::to_string(GetLastError()) + ")";
+			return;
+		}
+		nvda_test_ = reinterpret_cast<nvda_void_fn>(reinterpret_cast<void*>(GetProcAddress(nvda_lib_, "nvdaController_testIfRunning")));
+		nvda_cancel_ = reinterpret_cast<nvda_void_fn>(reinterpret_cast<void*>(GetProcAddress(nvda_lib_, "nvdaController_cancelSpeech")));
+		nvda_speak_ = reinterpret_cast<nvda_text_fn>(reinterpret_cast<void*>(GetProcAddress(nvda_lib_, "nvdaController_speakText")));
+		if(!nvda_test_ || !nvda_cancel_ || !nvda_speak_) {
+			nvda_note_ = "nvdaControllerClient.dll lacks the expected functions";
+			FreeLibrary(nvda_lib_);
+			nvda_lib_ = nullptr;
+			return;
+		}
+		probe_nvda();
+	}
+
+	/** Asks NVDA whether it is running; 0 means yes, otherwise a Windows RPC error code. */
+	unsigned long probe_nvda()
+	{
+		if(!nvda_test_) {
+			return 1;
+		}
+		nvda_code_ = nvda_test_();
+		nvda_note_ = "NVDA controller test: " + std::to_string(nvda_code_)
+			+ (nvda_code_ == 0 ? " (NVDA is running)" : nvda_code_ == 1722 ? " (NVDA is not running)" : " (error)");
+		return nvda_code_;
+	}
+
+	/** Name of the engine Universal Speech uses now. */
+	std::string us_engine()
+	{
+		int cur = getv_(SP_ENGINE);
+		auto list = engines();
+		if(cur >= 0 && static_cast<std::size_t>(cur) < list.size()) {
+			return list[cur];
+		}
+		return std::string();
+	}
+
+	/**
+	 * True when NVDA should be addressed directly: automatic mode (or NVDA
+	 * chosen) and Universal Speech fell back to SAPI or nothing although
+	 * NVDA answers that it is running.
+	 */
+	bool use_direct_nvda()
+	{
+		if(!nvda_speak_) {
+			return false;
+		}
+		auto list = engines();
+		const bool nvda_forced = forced_ >= 0 && static_cast<std::size_t>(forced_) < list.size() && list[forced_] == "NVDA";
+		if(forced_ >= 0 && !nvda_forced) {
+			return false;
+		}
+		const std::string eng = us_engine();
+		if(!nvda_forced && !eng.empty() && eng != "SAPI5" && eng != "Narrator") {
+			return false; // a screen reader was found by Universal Speech
+		}
+		const DWORD now = GetTickCount();
+		if(now - last_nvda_probe_ >= 5000) {
+			last_nvda_probe_ = now;
+			probe_nvda();
+		}
+		return nvda_code_ == 0;
 	}
 
 	void say(const std::string& utf8, bool interrupt) override
@@ -267,20 +348,56 @@ public:
 		}
 		avoid_silent_engines();
 		std::wstring w = widen(utf8);
+		if(use_direct_nvda()) {
+			if(interrupt) {
+				nvda_cancel_();
+			}
+			if(nvda_speak_(w.c_str()) == 0) {
+				direct_nvda_ = true;
+				return;
+			}
+			nvda_code_ = 1; // failed: probe again later
+		}
+		direct_nvda_ = false;
 		say_(w.c_str(), interrupt ? 1 : 0);
 	}
 
 	void stop() override
 	{
+		if(direct_nvda_ && nvda_cancel_) {
+			nvda_cancel_();
+			return;
+		}
 		if(lib_) {
 			stop_();
 		}
+	}
+
+	std::string diagnostics() override
+	{
+		std::string res = nvda_note_;
+		if(lib_) {
+			std::vector<std::string> avail;
+			auto list = engines();
+			for(std::size_t i = 0; i < list.size(); ++i) {
+				avail.push_back(list[i] + (getv_(SP_ENGINE_AVAILABLE + static_cast<int>(i)) ? " yes" : " no"));
+			}
+			std::string joined;
+			for(const std::string& a : avail) {
+				joined += (joined.empty() ? "" : ", ") + a;
+			}
+			res += (res.empty() ? "" : "; ") + std::string("engines running: ") + joined;
+		}
+		return res;
 	}
 
 	std::string current_engine() override
 	{
 		if(!lib_) {
 			return std::string();
+		}
+		if(direct_nvda_) {
+			return "NVDA (direct)";
 		}
 		int cur = getv_(SP_ENGINE);
 		auto list = engines();
@@ -291,6 +408,17 @@ public:
 	}
 
 private:
+	using nvda_void_fn = unsigned long(__stdcall*)();
+	using nvda_text_fn = unsigned long(__stdcall*)(const wchar_t*);
+	HMODULE nvda_lib_ = nullptr;
+	nvda_void_fn nvda_test_ = nullptr;
+	nvda_void_fn nvda_cancel_ = nullptr;
+	nvda_text_fn nvda_speak_ = nullptr;
+	unsigned long nvda_code_ = 1;
+	std::string nvda_note_;
+	DWORD last_detect_ = 0;
+	DWORD last_nvda_probe_ = 0;
+	bool direct_nvda_ = false;
 	HMODULE lib_ = nullptr;
 	say_fn say_ = nullptr;
 	stop_fn stop_ = nullptr;
@@ -412,6 +540,10 @@ void worker_main(std::string id, std::string log_path, bool sapi_fallback, std::
 	{
 		std::lock_guard lock(s.mutex);
 		st.engine = be->current_engine();
+		const std::string diag = be->diagnostics();
+		if(!diag.empty()) {
+			st.detail += (st.detail.empty() ? "" : "; ") + diag;
+		}
 		s.status = st;
 		s.engines = be->engines();
 	}

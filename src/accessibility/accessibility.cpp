@@ -494,6 +494,17 @@ void speak(const std::string& raw, msg kind)
 
 	speech::say(text, interrupt);
 	test_driver::on_spoken(text);
+	{
+		// Log when the speech engine changes (for example NVDA started after the game).
+		static std::string logged_engine;
+		const std::string eng = speech::status().engine;
+		if(!eng.empty() && eng != logged_engine) {
+			if(!logged_engine.empty()) {
+				log("speech engine now: " + eng);
+			}
+			logged_engine = eng;
+		}
+	}
 	g_last = text;
 	g_last_time = now;
 	g_history.push_back(text);
