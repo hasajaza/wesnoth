@@ -1278,7 +1278,8 @@ std::vector<std::string> unit_detail_lines(const unit& u)
 	if(u.vision() != u.total_movement()) {
 		lines.push_back(_("vision") + std::string(" ") + std::to_string(u.vision()));
 	}
-	lines.push_back(coords(u.get_location()));
+	lines.push_back(_("position on the map: column") + std::string(" ") + std::to_string(u.get_location().wml_x()) + ", "
+		+ _("row") + " " + std::to_string(u.get_location().wml_y()));
 	return lines;
 }
 

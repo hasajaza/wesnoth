@@ -112,7 +112,7 @@ key Down
 expect level 1
 mark
 key End
-expect 7, 4
+expect position on the map: column 7, row 4
 mark
 key F4
 expect resistances
