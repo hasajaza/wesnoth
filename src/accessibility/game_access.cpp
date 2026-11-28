@@ -22,6 +22,7 @@
 #include "controller_base.hpp"
 #include "formula/string_utils.hpp"
 #include "game_board.hpp"
+#include "lua_jailbreak_exception.hpp"
 #include "game_display.hpp"
 #include "gettext.hpp"
 #include "gui/dialogs/edit_text.hpp"
@@ -401,6 +402,21 @@ map_location closest_reachable(const unit& sel, const map_location& target, int*
 }
 
 /** Defense, movement cost and reachability for the selected unit. */
+/** True if the selected unit can attack the enemy at eloc this turn (a free hex next to it is reachable). */
+bool can_attack_now(const unit& sel, const map_location& eloc)
+{
+	if(sel.side() != viewing_side() || sel.attacks_left() == 0) {
+		return false;
+	}
+	const pathfind::paths& paths = mouse().current_paths();
+	for(const map_location& adj : get_adjacent_tiles(eloc)) {
+		if(adj == sel.get_location() || (paths.destinations.contains(adj) && !visible_unit(adj))) {
+			return true;
+		}
+	}
+	return false;
+}
+
 std::string selected_unit_terrain_info(const map_location& loc, bool include_reach)
 {
 	const unit* sel = selected_unit();
@@ -582,6 +598,8 @@ map_location::DIRECTION dir_of(command c)
 
 // ------------------------------------------------------------- lists ---
 
+std::string short_name(const unit& u);
+
 enum list_kind { L_UNITS, L_ACTIVE, L_WOUNDED, L_ALLIES, L_ENEMIES, L_VILLAGES, L_LABELS, L_REACH, L_TARGETS, L_KEEPS };
 
 struct list_entry
@@ -633,8 +651,15 @@ std::vector<list_entry> build_list(list_kind kind)
 			}
 			return loc_less(a->get_location(), b->get_location());
 		});
+		const unit* sel = selected_unit();
 		for(const unit* u : units) {
-			res.push_back({u->get_location(), map_location(), unit_brief(*u)});
+			std::string text = unit_brief(*u);
+			if(kind == L_ENEMIES && sel && sel->side() == viewing_side()) {
+				// Where it is from the selected unit, and whether it can be attacked now.
+				text += ", " + relative_position(sel->get_location(), u->get_location()) + " " + _("from") + " " + short_name(*sel) + ", "
+					+ (can_attack_now(*sel, u->get_location()) ? _("can be attacked this turn") : _("out of reach this turn"));
+			}
+			res.push_back({u->get_location(), map_location(), text});
 		}
 		break;
 	}
@@ -721,11 +746,19 @@ std::vector<list_entry> build_list(list_kind kind)
 				std::string from = own_hex ? std::string(_("from your current position"))
 					: _("from") + std::string(" ") + coords(adj) + ", " + terrain_name(adj) + ", "
 						+ std::to_string(100 - sel->defense_modifier(terrain)) + "% " + _("defense");
-				res.push_back({eloc, adj, unit_brief(e) + ", " + coords(eloc) + ", " + from});
+				res.push_back({eloc, adj, unit_brief(e) + ", " + coords(eloc) + ", "
+					+ relative_position(sel->get_location(), eloc) + ", " + from});
 			}
 		}
-		std::sort(res.begin(), res.end(), [](const list_entry& a, const list_entry& b) {
-			if(a.loc != b.loc) return loc_less(a.loc, b.loc);
+		// Nearest enemies first; all attack positions of one enemy together.
+		const map_location here = sel->get_location();
+		std::sort(res.begin(), res.end(), [&here](const list_entry& a, const list_entry& b) {
+			if(a.loc != b.loc) {
+				const std::size_t da = distance_between(here, a.loc), db = distance_between(here, b.loc);
+				if(da != db) return da < db;
+				return loc_less(a.loc, b.loc);
+			}
+			if(a.from == here || b.from == here) return a.from == here && b.from != here;
 			return loc_less(a.from, b.from);
 		});
 		break;
@@ -844,10 +877,23 @@ void cycle_list(list_kind kind, int direction)
 		&& (kind != L_TARGETS || items[it->second].from == g.plan_from)) {
 		pos = it->second;
 	}
-	if(pos < 0) {
-		pos = direction > 0 ? -1 : n;
+	// Index of the item to announce.
+	int next = -1;
+	if(pos >= 0) {
+		next = pos + direction;
+	} else if(kind == L_TARGETS) {
+		// Not cycling yet: the enemy under the cursor comes first.
+		for(int i = 0; i < n; ++i) {
+			if(items[i].loc == g.cursor) {
+				next = i;
+				break;
+			}
+		}
 	}
-	pos += direction;
+	if(next < 0 && pos < 0) {
+		next = direction > 0 ? 0 : n - 1;
+	}
+	pos = next;
 	if(pos >= n) {
 		pos = 0;
 		cue("edge");
@@ -899,6 +945,17 @@ void select_or_act()
 
 	const map_location before_sel = mh.get_selected_hex();
 	const unit* target = visible_unit(g.cursor);
+	if(!browse && sel && sel->side() == viewing_side() && target && viewer().is_enemy(target->side())
+		&& mh.get_selected_hex() == sel->get_location() && !can_attack_now(*sel, g.cursor)) {
+		// Say why nothing happens instead of staying silent.
+		std::string why = sel->attacks_left() == 0
+			? short_name(*sel) + " " + _("has already attacked this turn")
+			: short_name(*sel) + " " + _("cannot reach this enemy this turn; a unit must stand next to it to attack") + ". "
+				+ _("Control Enter moves closer, F7 lists the enemies you can attack now");
+		speak(short_name(*target) + " " + _("at") + " " + coords(g.cursor) + ": " + why + ".", msg::reply);
+		cue("error");
+		return;
+	}
 	bool was_move = sel && sel->side() == viewing_side() && !target && g.cursor != sel->get_location()
 		&& mh.current_paths().destinations.contains(g.cursor);
 
@@ -1733,6 +1790,10 @@ bool handle_event(controller_base& controller, const SDL_Event& event)
 			g.suppress_text_input = is_printable(event);
 		}
 		return done;
+	} catch(const lua_jailbreak_exception&) {
+		// The game's own control flow (victory, defeat, quit, end of turn):
+		// it must reach the game loop.
+		throw;
 	} catch(const std::exception& e) {
 		log(std::string("map command failed: ") + keymap::command_id(cmd) + ": " + e.what());
 		return true;

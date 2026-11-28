@@ -63,6 +63,14 @@ Changes after the first JAWS test (same version number until release)
   costs and how many moves would be left, or the total cost and turns needed.
 - The help's unit statistics ("HP: 32 Moves: 5") are read without colon
   pauses (the help uses no-break spaces, which were not recognised).
+- Choosing whom to attack: F7 starts with the enemy under the cursor and
+  lists the nearest enemies first, each with its direction from your unit;
+  F4 says for each enemy whether the selected unit can attack it this turn;
+  Enter on an enemy that cannot be attacked now says why (it was silent,
+  and the next F7 + Enter attacked another enemy).
+- The scenario-end signal of the game is no longer caught by the
+  accessibility layer when the last enemy dies from a keyboard attack.
+- The "Clear Labels" question (Ctrl+C) starts on "No", like the quit question.
 - Permanent download link for the newest tested build (see INSTALL.txt).
 
 0.1.0 (first test version, for Battle for Wesnoth 1.18.8)

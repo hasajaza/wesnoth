@@ -57,8 +57,12 @@ expect not reachable this turn, total movement cost
 expect takes
 
 # The Grunt's hex is occupied: the closest reachable hex is offered.
+# With a unit selected, F4 also says where each enemy is and whether it can
+# be attacked this turn.
 mark
 key F4
+expect from
+expect can be attacked this turn
 key X
 expect closest reachable hex
 expect 1 away

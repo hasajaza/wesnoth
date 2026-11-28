@@ -1371,9 +1371,10 @@ void window_opened(window& win)
 	}
 
 	int idx = initial_focus(win, c);
-	if(win.id() == "message" && title == translation::gettext("Quit")) {
-		// The game's quit question: start on "No" so that an Enter pressed
-		// by habit does not end the game (Tab reaches "Yes").
+	if(win.id() == "message" && (title == translation::gettext("Quit") || title == translation::gettext("Clear Labels"))) {
+		// The game's quit and clear labels questions: start on "No" so that
+		// an Enter pressed by habit does not end the game or delete labels
+		// (Tab reaches "Yes").
 		for(std::size_t i = 0; i < c.controls.size(); ++i) {
 			if(c.controls[i].w->id() == "cancel") {
 				idx = static_cast<int>(i);

@@ -86,6 +86,16 @@ key Enter
 wait-for 20000 advanced to
 wait 4000
 
+# Enter on an enemy that cannot be attacked says why instead of nothing.
+key F3
+key F3
+key Enter
+wait 800
+key F4
+mark
+key Enter
+expect has already attacked this turn
+
 # Recruit with the native dialog (Ctrl+R).
 mark
 key Shift+Home
