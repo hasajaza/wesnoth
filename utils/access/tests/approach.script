@@ -39,6 +39,22 @@ expect village
 mark
 key X
 expect reachable
+# C adds whether the selected unit can get there and what it costs.
+mark
+key C
+expect from the selected unit
+expect reachable this turn, costs
+expect moves left
+# A hex far away: not this turn, with the total cost and the turns needed.
+key Ctrl+G
+wait-dialog 10000 edit_text
+text 16 8
+key Enter
+wait 800
+mark
+key C
+expect not reachable this turn, total movement cost
+expect takes
 
 # The Grunt's hex is occupied: the closest reachable hex is offered.
 mark

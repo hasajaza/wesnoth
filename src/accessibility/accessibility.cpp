@@ -307,6 +307,15 @@ std::string plain_text(const std::string& markup)
 		}
 		out += c;
 	}
+	// Non-breaking and thin spaces (the help writes "HP:" + no-break space +
+	// "32") count as ordinary spaces.
+	for(const char* sp : {"\xC2\xA0", "\xE2\x80\xAF", "\xE2\x80\x89", "\xE2\x80\x82", "\xE2\x80\x83"}) {
+		const std::string needle(sp);
+		std::size_t pos;
+		while((pos = out.find(needle)) != std::string::npos) {
+			out.replace(pos, needle.size(), " ");
+		}
+	}
 	// Collapse whitespace.
 	std::string res;
 	res.reserve(out.size());

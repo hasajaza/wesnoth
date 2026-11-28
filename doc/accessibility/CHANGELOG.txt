@@ -59,6 +59,10 @@ Changes after the first JAWS test (same version number until release)
   NVDA controller's answer, which screen readers were found, and every
   change of speech engine.
 - Unnamed fields are named from their id ("txtFilter" is read "filter").
+- C also says whether the selected unit can reach the hex this turn, what it
+  costs and how many moves would be left, or the total cost and turns needed.
+- The help's unit statistics ("HP: 32 Moves: 5") are read without colon
+  pauses (the help uses no-break spaces, which were not recognised).
 - Permanent download link for the newest tested build (see INSTALL.txt).
 
 0.1.0 (first test version, for Battle for Wesnoth 1.18.8)

@@ -200,6 +200,9 @@ BOOST_AUTO_TEST_CASE(test_spoken_form_reads_label_value_pairs_without_pauses)
 	BOOST_CHECK_EQUAL(spoken_form("HP: 29 Moves: 6 Cost: 17 Alignment: neutral Required XP: 44"),
 		"hit points 29, Moves 6, Cost 17, Alignment neutral, Required experience 44");
 	BOOST_CHECK_EQUAL(spoken_form("HP: 39/39 XP: 0/37"), "hit points 39/39, experience 0/37");
+	// The help separates label and value with a no-break space.
+	BOOST_CHECK_EQUAL(spoken_form(accessibility::plain_text("HP:\xC2\xA0" "32 Moves:\xC2\xA0" "5 Cost:\xC2\xA0" "14")),
+		"hit points 32, Moves 5, Cost 14");
 	BOOST_CHECK_EQUAL(spoken_form("Lawful units: +25%. Chaotic units: -25%."), "Lawful units +25%. Chaotic units -25%.");
 	BOOST_CHECK_EQUAL(spoken_form("Chance to kill Quintain: 82%."), "Chance to kill Quintain 82%.");
 	// Colons before ordinary text stay.

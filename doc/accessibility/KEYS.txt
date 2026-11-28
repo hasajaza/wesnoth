@@ -67,7 +67,9 @@ Ctrl+G             Jump to coordinates (type column and row, for example 12 5)
 Ctrl+1 to Ctrl+9   Set bookmark 1 to 9 at the cursor
 
 Information (nothing is changed by these keys)
-C                  Cursor coordinates, distance and direction from the selected unit and from your leader
+C                  Cursor coordinates, distance and direction from the selected unit and from your leader;
+                   with your unit selected also whether it can get there this turn, what it
+                   costs and how many moves are left (or how many turns it takes)
 Shift+C            Scenario name and map size
 X                  Full description of the tile under the cursor
 Shift+X            Route of the selected unit to the cursor: length, turns, cost and directions

@@ -1027,12 +1027,62 @@ std::string distance_text(int d)
 	return std::to_string(d) + " " + (d == 1 ? _("hex") : _("hexes"));
 }
 
+/**
+ * Can the selected unit get to the hex: reachable this turn (cost and moves
+ * left), or how many turns, or not at all. Uses the game's own route finder.
+ */
+std::string reach_summary(const unit& sel, const map_location& loc)
+{
+	if(sel.side() != viewing_side() || loc == sel.get_location() || loc_shrouded(loc)) {
+		return std::string();
+	}
+	const pathfind::paths& paths = mouse().current_paths();
+	auto dest = paths.destinations.find(loc);
+	if(const unit* there = visible_unit(loc)) {
+		if(viewer().is_enemy(there->side())) {
+			bool adjacent_reachable = false;
+			for(const map_location& adj : get_adjacent_tiles(loc)) {
+				if(adj == sel.get_location() || (paths.destinations.contains(adj) && !visible_unit(adj))) {
+					adjacent_reachable = true;
+					break;
+				}
+			}
+			if(sel.attacks_left() > 0 && adjacent_reachable) {
+				return _("enemy, can be attacked this turn");
+			}
+			return _("enemy, cannot be attacked this turn");
+		}
+		return _("occupied by a unit");
+	}
+	if(dest != paths.destinations.end()) {
+		const int cost = sel.movement_left() - dest->move_left;
+		return _("reachable this turn") + std::string(", ") + _("costs") + " " + std::to_string(cost) + " "
+			+ (cost == 1 ? _("move") : _("moves")) + ", " + std::to_string(dest->move_left) + " " + _("moves left");
+	}
+	team& t = g.pc->get_teams()[disp().viewing_team()];
+	pathfind::marked_route route = mouse().get_route(&sel, loc, t);
+	if(route.steps.empty() || route.move_cost >= movetype::UNREACHABLE) {
+		return _("this unit cannot get there");
+	}
+	int turns = 0;
+	for(const auto& m : route.marks) {
+		turns = std::max(turns, m.second.turns);
+	}
+	std::string res = _("not reachable this turn") + std::string(", ") + _("total movement cost") + " "
+		+ std::to_string(route.move_cost);
+	if(turns > 0) {
+		res += ", " + VNGETTEXT("takes $n turn", "takes $n turns", turns, {{"n", std::to_string(turns)}});
+	}
+	return res;
+}
+
 void where_am_i()
 {
 	std::vector<std::string> parts {coords(g.cursor)};
 	if(const unit* sel = selected_unit()) {
 		if(sel->get_location() != g.cursor) {
 			parts.push_back(relative_position(sel->get_location(), g.cursor) + " " + _("from the selected unit"));
+			parts.push_back(reach_summary(*sel, g.cursor));
 		}
 	}
 	const unit* leader = nullptr;
